@@ -1,1 +1,8 @@
 export const PKG_NAME = '@jandastavej/shared';
+export * from './schemas/common.js';
+export * from './schemas/errors.js';
+export * from './schemas/template.js';
+export * from './schemas/generation.js';
+export * from './schemas/auth.js';
+export * from './schemas/audit.js';
+export * from './validators/answers.js';
