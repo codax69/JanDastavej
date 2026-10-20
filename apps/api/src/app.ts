@@ -61,6 +61,11 @@ app.get('/api/v1/health', (_req: Request, res: Response) => {
   });
 });
 
+// Redirect browser accesses to /admin to the web frontend SPA
+app.get(['/admin', '/admin/*'], (_req: Request, res: Response) => {
+  res.redirect('http://localhost:5173/admin/login');
+});
+
 // Public routers
 app.use('/api/v1/templates', templatesRouter);
 app.use('/api/v1/generations', generationsRouter);

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, FileText, Clock, Shield, LogOut, ArrowRight, Eye } from 'lucide-react';
+import { Plus, Shield, LogOut, Eye, ArrowLeft } from 'lucide-react';
 import { Button } from '../../components/ui/Button.js';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card.js';
 import { Badge } from '../../components/ui/Badge.js';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1';
 
 export function AdminTemplatesPage() {
   const navigate = useNavigate();
@@ -12,7 +14,7 @@ export function AdminTemplatesPage() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['admin-templates'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:4000/api/v1/admin/templates', {
+      const res = await fetch(`${API_BASE}/admin/templates`, {
         credentials: 'include',
       });
       if (!res.ok) {
@@ -27,7 +29,7 @@ export function AdminTemplatesPage() {
   });
 
   const handleLogout = async () => {
-    await fetch('http://localhost:4000/api/v1/admin/auth/logout', {
+    await fetch(`${API_BASE}/admin/auth/logout`, {
       method: 'POST',
       credentials: 'include',
     });
@@ -38,12 +40,23 @@ export function AdminTemplatesPage() {
 
   return (
     <div className="space-y-6">
+      {/* Top Breadcrumb & Link */}
+      <div>
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>Exit to Citizen Portal</span>
+        </Link>
+      </div>
+
       {/* Admin Top Navigation */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-card p-4 rounded-lg border border-border">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-primary">Template Administration</h1>
           <p className="text-xs text-muted-foreground">
-            Manage versioned legal document schemas, review states, and publications
+            Collector Office Gandhinagar · Template governance, versioning & review
           </p>
         </div>
 
@@ -71,7 +84,7 @@ export function AdminTemplatesPage() {
             onClick={() => {
               const slug = prompt('Enter new template slug (e.g. sample-income-declaration):');
               if (slug) {
-                fetch('http://localhost:4000/api/v1/admin/templates', {
+                fetch(`${API_BASE}/admin/templates`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   credentials: 'include',

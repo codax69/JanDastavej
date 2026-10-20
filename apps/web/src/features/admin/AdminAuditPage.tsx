@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Shield, Clock, Filter } from 'lucide-react';
-import { Button } from '../../components/ui/Button.js';
+import { ArrowLeft, Shield } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card.js';
 import { Badge } from '../../components/ui/Badge.js';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1';
 
 export function AdminAuditPage() {
   const navigate = useNavigate();
@@ -15,8 +16,8 @@ export function AdminAuditPage() {
     queryFn: async () => {
       const url =
         actionFilter !== 'all'
-          ? `http://localhost:4000/api/v1/admin/audit-events?action=${actionFilter}`
-          : 'http://localhost:4000/api/v1/admin/audit-events';
+          ? `${API_BASE}/admin/audit-events?action=${actionFilter}`
+          : `${API_BASE}/admin/audit-events`;
       const res = await fetch(url, { credentials: 'include' });
       if (!res.ok) {
         if (res.status === 401) navigate('/admin/login');

@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, CheckCircle, XCircle, Send, Globe, Shield, RefreshCw } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Send, Globe, Shield } from 'lucide-react';
 import { Button } from '../../components/ui/Button.js';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card.js';
 import { Badge } from '../../components/ui/Badge.js';
 import { Alert } from '../../components/ui/Alert.js';
 import { renderDocumentHtml, getDocumentStyles } from '@jandastavej/shared';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1';
 
 export function AdminTemplateEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -17,7 +19,7 @@ export function AdminTemplateEditorPage() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['admin-template-detail', id],
     queryFn: async () => {
-      const res = await fetch(`http://localhost:4000/api/v1/admin/templates/${id}`, {
+      const res = await fetch(`${API_BASE}/admin/templates/${id}`, {
         credentials: 'include',
       });
       if (!res.ok) {
@@ -120,7 +122,7 @@ export function AdminTemplateEditorPage() {
                 size="sm"
                 onClick={() =>
                   handleTransition(
-                    `http://localhost:4000/api/v1/admin/template-versions/${currentVersion._id}/submit-review`
+                    `${API_BASE}/admin/template-versions/${currentVersion._id}/submit-review`
                   )
                 }
                 className="gap-1.5"
@@ -137,7 +139,7 @@ export function AdminTemplateEditorPage() {
                   variant="primary"
                   onClick={() =>
                     handleTransition(
-                      `http://localhost:4000/api/v1/admin/template-versions/${currentVersion._id}/approve`
+                      `${API_BASE}/admin/template-versions/${currentVersion._id}/approve`
                     )
                   }
                   className="gap-1.5"
@@ -152,7 +154,7 @@ export function AdminTemplateEditorPage() {
                     const reason = prompt('Enter rejection reason:');
                     if (reason) {
                       handleTransition(
-                        `http://localhost:4000/api/v1/admin/template-versions/${currentVersion._id}/reject`,
+                        `${API_BASE}/admin/template-versions/${currentVersion._id}/reject`,
                         'POST',
                         { reason }
                       );
@@ -172,7 +174,7 @@ export function AdminTemplateEditorPage() {
                 variant="primary"
                 onClick={() =>
                   handleTransition(
-                    `http://localhost:4000/api/v1/admin/template-versions/${currentVersion._id}/publish`
+                    `${API_BASE}/admin/template-versions/${currentVersion._id}/publish`
                   )
                 }
                 className="gap-1.5"
