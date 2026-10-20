@@ -9,6 +9,10 @@ import { LibraryPage } from './features/documents/LibraryPage.js';
 import { DocumentDetailPage } from './features/documents/DocumentDetailPage.js';
 import { DynamicFormPage } from './features/generation/DynamicFormPage.js';
 import { PreviewPage } from './features/preview/PreviewPage.js';
+import { AdminLoginPage } from './features/admin/AdminLoginPage.js';
+import { AdminTemplatesPage } from './features/admin/AdminTemplatesPage.js';
+import { AdminTemplateEditorPage } from './features/admin/AdminTemplateEditorPage.js';
+import { AdminAuditPage } from './features/admin/AdminAuditPage.js';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,12 +30,20 @@ export default function App() {
         <SessionReuseProvider>
           <BrowserRouter>
             <Routes>
+              {/* Citizen Layout */}
               <Route element={<AppLayout />}>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/documents" element={<LibraryPage />} />
                 <Route path="/documents/:slug" element={<DocumentDetailPage />} />
                 <Route path="/create/:templateId" element={<DynamicFormPage />} />
                 <Route path="/preview/:sessionId" element={<PreviewPage />} />
+
+                {/* Admin Routes */}
+                <Route path="/admin/login" element={<AdminLoginPage />} />
+                <Route path="/admin/templates" element={<AdminTemplatesPage />} />
+                <Route path="/admin/templates/:id" element={<AdminTemplateEditorPage />} />
+                <Route path="/admin/audit" element={<AdminAuditPage />} />
+
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
             </Routes>

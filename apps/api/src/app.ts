@@ -9,6 +9,7 @@ import { requestIdMiddleware } from './middleware/requestId.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { templatesRouter } from './modules/templates/templates.router.js';
 import { generationsRouter } from './modules/generations/generations.router.js';
+import { adminRouter } from './modules/admin/admin.router.js';
 
 export const app = express();
 
@@ -60,9 +61,12 @@ app.get('/api/v1/health', (_req: Request, res: Response) => {
   });
 });
 
-// Mount routers
+// Public routers
 app.use('/api/v1/templates', templatesRouter);
 app.use('/api/v1/generations', generationsRouter);
+
+// Admin router (role checked server-side)
+app.use('/api/v1/admin', adminRouter);
 
 // Standard error handler
 app.use(errorHandler);
