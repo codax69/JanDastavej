@@ -1,5 +1,4 @@
 import { chromium } from 'playwright';
-import fs from 'node:fs';
 
 async function audit() {
   console.log('[Audit] Launching Playwright browser...');
@@ -65,11 +64,27 @@ async function audit() {
     await page.waitForSelector('text=દસ્તાવેજ પ્રિવ્યૂ');
     await page.screenshot({ path: `docs/screenshots/${screen.name}_05_preview.png`, fullPage: true });
 
+    // Test Admin screens on desktop
+    if (screen.name === 'desktop') {
+      await page.goto('http://localhost:5173/admin/login');
+      await page.waitForSelector('text=Authorized Staff Sign In');
+      await page.screenshot({ path: 'docs/screenshots/desktop_06_admin_login.png', fullPage: true });
+
+      await page.click('button[type="submit"]');
+      await page.waitForURL(/.*\/admin\/templates/);
+      await page.waitForSelector('text=Template Administration');
+      await page.screenshot({ path: 'docs/screenshots/desktop_07_admin_templates.png', fullPage: true });
+
+      await page.goto('http://localhost:5173/admin/audit');
+      await page.waitForSelector('text=Audit Trail');
+      await page.screenshot({ path: 'docs/screenshots/desktop_08_admin_audit.png', fullPage: true });
+    }
+
     await context.close();
   }
 
   await browser.close();
-  console.log('[Audit] Flow audit completed. Screenshots captured in docs/screenshots/');
+  console.log('[Audit] All flows verified and screenshots saved.');
 }
 
 audit().catch((err) => {

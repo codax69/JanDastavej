@@ -220,7 +220,7 @@ adminRouter.post(
 adminRouter.get('/templates/:id', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const template = await TemplateModel.findById(id).lean();
+    const template = (await TemplateModel.findById(id).lean()) as (ITemplate & { _id: Types.ObjectId }) | null;
     if (!template) {
       throw new JanDastavejError('NOT_FOUND', 'Template not found', 404);
     }

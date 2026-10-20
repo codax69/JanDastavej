@@ -10,12 +10,12 @@ let publishedVersionId: string;
 
 beforeAll(async () => {
   await connectDB();
-  const template = await TemplateModel.findOne({ slug: 'sample-declaration' }).lean();
-  const version = await TemplateVersionModel.findOne({
+  const template = (await TemplateModel.findOne({ slug: "sample-declaration" }).lean()) as any;
+  const version = (await TemplateVersionModel.findOne({
     templateId: template!._id,
     language: 'gu',
-    status: 'published',
-  }).lean();
+    status: "published",
+  }).lean()) as any;
   publishedVersionId = String(version!._id);
 });
 
