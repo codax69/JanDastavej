@@ -1,9 +1,22 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Download, Printer, Edit, ShieldAlert, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import {
+  ArrowLeft,
+  Download,
+  Printer,
+  Edit,
+  ShieldAlert,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  Paperclip,
+  FileText,
+  Layers,
+} from 'lucide-react';
 import { api, ApiClientError } from '../../api/client.js';
 import { useLanguage } from '../../context/LanguageContext.js';
+import { useCitizenAuth } from '../../context/CitizenAuthContext.js';
 import { StepIndicator } from '../../components/shared/StepIndicator.js';
 import { Button } from '../../components/ui/Button.js';
 import { Card, CardContent } from '../../components/ui/Card.js';
@@ -15,11 +28,14 @@ import { getDocumentStyles } from '@jandastavej/shared';
 export function PreviewPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const { language } = useLanguage();
+  const { citizen } = useCitizenAuth();
   const navigate = useNavigate();
 
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingBundle, setDownloadingBundle] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [selectedAnnexureIds, setSelectedAnnexureIds] = useState<string[]>([]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['generation-session', sessionId],
@@ -28,7 +44,21 @@ export function PreviewPage() {
     retry: false,
   });
 
+  const { data: myDocsData } = useQuery({
+    queryKey: ['my-documents', citizen?.id],
+    queryFn: () => api.getMyDocuments(),
+    enabled: !!citizen,
+    staleTime: 30 * 1000,
+  });
+
   const session = data?.data;
+  const userDocuments = myDocsData?.data || [];
+
+  const handleToggleAnnexure = (docId: string) => {
+    setSelectedAnnexureIds((prev) =>
+      prev.includes(docId) ? prev.filter((id) => id !== docId) : [...prev, docId]
+    );
+  };
 
   const handleEditReturn = () => {
     if (!session) return;
@@ -64,6 +94,29 @@ export function PreviewPage() {
       setDownloading(false);
     }
   };
+
+  const handleDownloadBundle = async () => {
+    if (!disclaimerAccepted || !sessionId || selectedAnnexureIds.length === 0) return;
+    setDownloadingBundle(true);
+    setDownloadError(null);
+
+    try {
+      const blob = await api.bundleAnnexures(sessionId, selectedAnnexureIds);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `JanDastavej-Bundle-${session?.templateSlug || 'document'}-${language}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      setDownloadError(err.message || 'Failed to generate annexure bundle PDF.');
+    } finally {
+      setDownloadingBundle(false);
+    }
+  };
+
 
   if (isLoading) {
     return (
@@ -153,6 +206,69 @@ export function PreviewPage() {
         )}
       </div>
 
+      {/* Annexure Bundling Panel (D3, P1, UD-12) */}
+      {citizen && userDocuments.length > 0 && (
+        <div className="no-print bg-card border border-border p-4 sm:p-5 rounded-lg space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Paperclip className="h-4 w-4 text-primary" />
+              <h3 className="font-bold text-sm text-foreground">
+                {language === 'gu'
+                  ? 'સહાયક દસ્તાવેજો જોડાણ (એનક્ષર્સ) તરીકે ઉમેરો'
+                  : 'Attach Supporting Documents as Annexures'}
+              </h3>
+            </div>
+            {selectedAnnexureIds.length > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                {selectedAnnexureIds.length} {language === 'gu' ? 'જોડાણો પસંદ કર્યા' : 'Annexures selected'}
+              </Badge>
+            )}
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            {language === 'gu'
+              ? 'પસંદ કરેલ દસ્તાવેજો મુખ્ય સોગંદનામા પછી Annexure A, B... તરીકે એક જ PDF માં જોડાશે. JanDastavej એનક્ષર્સને પ્રમાણિત કરતું નથી.'
+              : 'Selected files will be merged after the affidavit with Annexure A/B labels. JanDastavej does not certify or attest annexures.'}
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+            {userDocuments.map((doc: any) => {
+              const isSelected = selectedAnnexureIds.includes(doc._id);
+              const letterIndex = selectedAnnexureIds.indexOf(doc._id);
+              const label = letterIndex >= 0 ? `Annexure ${String.fromCharCode(65 + letterIndex)}` : null;
+
+              return (
+                <div
+                  key={doc._id}
+                  onClick={() => handleToggleAnnexure(doc._id)}
+                  className={`p-2.5 rounded-md border text-xs flex items-center justify-between cursor-pointer transition-all ${
+                    isSelected
+                      ? 'border-primary/50 bg-primary/5 font-medium'
+                      : 'border-border bg-background hover:bg-muted/40'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => {}} // handled by parent onClick
+                      className="h-4 w-4 rounded text-primary"
+                    />
+                    <span className="truncate">{doc.originalName || doc.docType}</span>
+                  </div>
+
+                  {label && (
+                    <Badge variant="outline" className="text-[10px] text-primary border-primary/30 shrink-0 ml-2">
+                      {label}
+                    </Badge>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons Bar */}
       <div className="bg-card p-4 rounded-lg border border-border flex flex-wrap items-center justify-between gap-4 no-print shadow-xs">
         <div className="flex items-center gap-2">
@@ -162,12 +278,31 @@ export function PreviewPage() {
           </Button>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {!disclaimerAccepted && (
             <span className="text-xs text-muted-foreground hidden sm:inline">
               {language === 'gu' ? 'ડાઉનલોડ કરવા બાંહેધરી સ્વીકારો' : 'Accept disclaimer to download'}
             </span>
           )}
+
+          {/* Download Bundle with Annexures Button (D3) */}
+          {selectedAnnexureIds.length > 0 && (
+            <Button
+              variant="outline"
+              size="lg"
+              disabled={!disclaimerAccepted || downloadingBundle}
+              onClick={handleDownloadBundle}
+              className="gap-2 border-primary/40 text-primary hover:bg-primary/5"
+            >
+              <Layers className="h-4 w-4" />
+              <span>
+                {downloadingBundle
+                  ? language === 'gu' ? 'બંડલ તૈયાર થઈ રહ્યું છે...' : 'Preparing Bundle...'
+                  : language === 'gu' ? `PDF + ${selectedAnnexureIds.length} જોડાણો ડાઉનલોડ કરો` : `Download Bundle (${selectedAnnexureIds.length} Annexures)`}
+              </span>
+            </Button>
+          )}
+
           <Button
             variant="primary"
             size="lg"

@@ -68,3 +68,28 @@ Captured at 360×800 (mobile) and 1280×800 (desktop):
 - `docs/screenshots/mobile_05_preview.png`
 
 **Conclusion:** All P0 requirements for Stages 1–5 are satisfied. Proceeding to Stage 6 (Gujarati/English verification with test strings) and Stage 7 (Admin flows).
+
+---
+
+## 5. Feature Addendum 2 Audit — User Supporting Documents & Annexures
+
+**Specification Reference:** `docs/FEATURE_USER_DOCUMENTS_UPLOAD.md` (Amends `PRD.md`, `TRD.md`)
+
+| ID | Criterion | Expected Behavior | Observed Result | Status |
+|---|---|---|---|---|
+| **UD-01** | Signed-in Upload Gate | Anonymous users can create from blank forms; only signed-in citizens upload | Guest upload returns 401 `UNAUTHORIZED`; blank form creation passes without sign-in | PASS |
+| **UD-02** | Granular DPDP Consent | Upload requires recorded `process` consent; otherwise blocked | Returns 400 `CONSENT_REQUIRED` if process consent is missing or revoked | PASS |
+| **UD-03** | Safety Scanner Gate | Reject non-PDF/JPG/PNG, >10MB, encrypted, PDF active JS/launch, malware EICAR | Magic-byte MIME detection rejects fake headers; EICAR signature blocked; zero disk storage | PASS |
+| **UD-04** | Per-Field Human Confirmation | Never auto-apply extracted values to document form | Review modal requires per-field accept/discard/edit; confirmed list sent to backend | PASS |
+| **UD-05** | Pre-fill Tagging & Editable | Filled fields show "from your document" badge; remain 100% editable | Tag badge rendered on input label; manual typing and clearing fully supported | PASS |
+| **UD-06** | Session End Deletion (Default) | Default is no permanent storage; non-kept files have short TTL | Non-kept files expire after 2h TTL; kept files retain for 30 days under explicit consent | PASS |
+| **UD-07** | My Documents & Erasure | Expiry date displayed; immediate delete; Right to Erasure (`DELETE /me/data`) | Immediate deletion from disk storage and DB; "Delete all my data" purges all user files | PASS |
+| **UD-08** | IDOR Isolation | User A cannot read, download, or delete User B's file or extraction | Verified across `/me/documents/:id`, `/me/documents/:id/file`, `/me/documents/:id/extraction` | PASS |
+| **UD-09** | Admin Access Boundary | Admins and staff cannot browse citizen files outside audited break-glass | Admin template routes completely isolated from `/me/*` user documents | PASS |
+| **UD-10** | Minimal AI Assist | AI off by default; minimal masked text only; never images or full IDs | Local OCR + rules default; AI assist guarded by config flag + explicit consent | PASS |
+| **UD-11** | Sensitive ID Masking | Aadhaar, PAN masked by default in UI (`XXXX-XXXX-1234`), excluded from logs & audits | Sensitive fields masked with show/hide toggle; excluded from pino logs & audit events | PASS |
+| **UD-12** | Annexure Bundling | Merge affidavit with selected annexures into one PDF with Annexure A/B markers | Cover page generated with annexure index; each annexure labeled; single PDF output | PASS |
+| **UD-13** | XSS & Sanitization | Extracted text and filenames HTML-escaped before preview and PDF | XSS payloads (`<script>`, `onerror=`) neutralized via `escapeHtml()` in renderer | PASS |
+| **UD-14** | Gujarati Extraction Fallback | Gujarati ID/address regex patterns extract accurately or fall back to manual | Rule engine parses Gujarati DOB (`જન્મ તારીખ`) and name patterns gracefully | PASS |
+| **UD-15** | Single Render Path | Both preview and PDF use the identical sandboxed rendering engine | Shared Playwright and HTML generator compile identical layout for affidavit and bundles | PASS |
+

@@ -24,16 +24,22 @@ export function LibraryPage() {
   });
 
   const categories = [
-    { id: 'all', label: language === 'gu' ? 'બધા દસ્તાવેજો' : 'All Templates' },
-    { id: 'declaration', label: language === 'gu' ? 'સ્વ-ઘોષણાપત્રો' : 'Declarations' },
+    { id: 'all', label: language === 'gu' ? 'બધા' : 'All' },
     { id: 'affidavit', label: language === 'gu' ? 'સોગંદનામા (Affidavits)' : 'Affidavits' },
-    { id: 'certificate_support', label: language === 'gu' ? 'દાખલા/પ્રમાણપત્ર સહાયક' : 'Certificate Support' },
+    { id: 'declaration', label: language === 'gu' ? 'સ્વ-ઘોષણાપત્રો (Declarations)' : 'Declarations' },
+    { id: 'undertaking', label: language === 'gu' ? 'બાંહેધરીપત્રો (Undertakings)' : 'Undertakings' },
+    { id: 'letter', label: language === 'gu' ? 'પત્રો / અરજીઓ (Letters)' : 'Letters' },
+    { id: 'other', label: language === 'gu' ? 'અન્ય (Other)' : 'Other' },
   ];
 
   const filteredTemplates = useMemo(() => {
     let list = data?.data || [];
     if (selectedCategory !== 'all') {
-      list = list.filter((t) => t.category === selectedCategory);
+      if (selectedCategory === 'other') {
+        list = list.filter((t) => (t.category as string) === 'other' || t.category === 'certificate_support' || !t.category);
+      } else {
+        list = list.filter((t) => (t.category as string) === selectedCategory);
+      }
     }
     if (search.trim()) {
       const q = search.trim().toLowerCase();

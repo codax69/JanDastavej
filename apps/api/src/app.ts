@@ -11,6 +11,8 @@ import { templatesRouter } from './modules/templates/templates.router.js';
 import { generationsRouter } from './modules/generations/generations.router.js';
 import { adminRouter } from './modules/admin/admin.router.js';
 import { submissionsRouter } from './modules/submissions/submissions.router.js';
+import { citizenAuthRouter } from './modules/auth/citizenAuth.router.js';
+import { meRouter } from './modules/me/me.router.js';
 
 export const app = express();
 
@@ -36,7 +38,7 @@ app.use(
   })
 );
 app.use(cookieParser());
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '15mb' }));
 
 // Global rate limiting
 const limiter = rateLimit({
@@ -71,6 +73,8 @@ app.get(['/admin', '/admin/*'], (_req: Request, res: Response) => {
 app.use('/api/v1/templates', templatesRouter);
 app.use('/api/v1/generations', generationsRouter);
 app.use('/api/v1/submissions', submissionsRouter);
+app.use('/api/v1/auth', citizenAuthRouter);
+app.use('/api/v1/me', meRouter);
 
 // Admin router (role checked server-side)
 app.use('/api/v1/admin', adminRouter);

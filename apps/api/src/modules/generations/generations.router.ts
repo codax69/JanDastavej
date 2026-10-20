@@ -258,3 +258,171 @@ generationsRouter.post('/pdf', async (req: Request, res: Response, next: NextFun
     next(err);
   }
 });
+
+// POST /api/v1/generations/:sessionId/apply-extraction - Apply user-confirmed extracted values
+generationsRouter.post('/:sessionId/apply-extraction', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { sessionId } = req.params;
+    const { confirmedFields } = req.body;
+
+    if (!confirmedFields || typeof confirmedFields !== 'object') {
+      throw new JanDastavejError('VALIDATION_ERROR', 'confirmedFields object is required.', 400);
+    }
+
+    const session = await GenerationSessionModel.findById(sessionId);
+    if (!session || new Date() > new Date(session.expiresAt)) {
+      throw new JanDastavejError('SESSION_EXPIRED', 'Generation session expired.', 410);
+    }
+
+    // Merge only confirmed fields
+    session.answers = {
+      ...session.answers,
+      ...confirmedFields,
+    };
+
+    // Re-render preview HTML
+    session.previewHtml = renderDocumentHtml({
+      layoutKey: session.layoutKey,
+      language: session.language,
+      answers: session.answers,
+      isDemoOnly: true,
+    });
+
+    await session.save();
+
+    res.json({
+      data: {
+        sessionId: session._id,
+        answers: session.answers,
+        previewHtml: session.previewHtml,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/generations/:sessionId/bundle - Build PDF bundled with annexures
+generationsRouter.post('/:sessionId/bundle', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { sessionId } = req.params;
+    const { annexureDocIds } = req.body;
+
+    if (!Array.isArray(annexureDocIds) || annexureDocIds.length === 0) {
+      throw new JanDastavejError('VALIDATION_ERROR', 'Please select at least one annexure document.', 400);
+    }
+
+    const session = (await GenerationSessionModel.findById(sessionId).lean()) as any;
+    if (!session || new Date() > new Date(session.expiresAt)) {
+      throw new JanDastavejError('SESSION_EXPIRED', 'Session expired.', 410);
+    }
+
+    // Dynamic import to avoid circular dependency
+    const { UserDocumentModel } = await import('../../models/UserDocument.js');
+    const { storageService } = await import('../../services/storageService.js');
+
+    // Fetch user documents
+    const docs = (await UserDocumentModel.find({
+      _id: { $in: annexureDocIds },
+      status: { $ne: 'deleted' },
+    }).lean()) as any[];
+
+    if (docs.length === 0) {
+      throw new JanDastavejError('NOT_FOUND', 'Selected annexure documents not found.', 404);
+    }
+
+    // Generate Annexure Bundle HTML
+    let bundleHtml = session.previewHtml;
+
+    // Cover Page for Annexures
+    bundleHtml += `
+      <div style="page-break-before: always; padding: 40px; font-family: 'Noto Sans Gujarati', sans-serif;">
+        <div style="text-align: center; border-bottom: 2px solid #1a365d; padding-bottom: 16px; margin-bottom: 24px;">
+          <h2 style="font-size: 20px; font-weight: bold; color: #1a365d; margin: 0;">સહાયક પુરાવા / પરિશિષ્ટ (ANNEXURES LIST)</h2>
+          <p style="font-size: 12px; color: #4a5568; margin-top: 6px;">The following supporting documents are attached as uncertified annexures to the main affidavit.</p>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+          <thead>
+            <tr style="background: #edf2f7; text-align: left;">
+              <th style="padding: 10px; border: 1px solid #cbd5e0;">#</th>
+              <th style="padding: 10px; border: 1px solid #cbd5e0;">Annexure Label</th>
+              <th style="padding: 10px; border: 1px solid #cbd5e0;">Document Type</th>
+              <th style="padding: 10px; border: 1px solid #cbd5e0;">File Name</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    const labels = ['Annexure A', 'Annexure B', 'Annexure C', 'Annexure D', 'Annexure E', 'Annexure F'];
+    const docPages: string[] = [];
+
+    for (let i = 0; i < docs.length; i++) {
+      const d = docs[i];
+      const label = labels[i] || `Annexure ${i + 1}`;
+      bundleHtml += `
+        <tr>
+          <td style="padding: 8px 10px; border: 1px solid #cbd5e0;">${i + 1}</td>
+          <td style="padding: 8px 10px; border: 1px solid #cbd5e0; font-weight: bold; color: #1a365d;">${label}</td>
+          <td style="padding: 8px 10px; border: 1px solid #cbd5e0; text-transform: capitalize;">${d.docType.replace('_', ' ')}</td>
+          <td style="padding: 8px 10px; border: 1px solid #cbd5e0;">${d.originalName}</td>
+        </tr>
+      `;
+
+      try {
+        const fileBuffer = await storageService.getFile(String(d.userId), d.storageKey);
+        const base64Data = fileBuffer.toString('base64');
+
+        if (d.mimeType.startsWith('image/')) {
+          docPages.push(`
+            <div style="page-break-before: always; padding: 24px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px;">
+                <span style="font-weight: bold; font-size: 16px; color: #1a365d;">${label} (${d.docType.replace('_', ' ').toUpperCase()})</span>
+                <span style="font-size: 11px; color: #718096;">JanDastavej Document Annexure</span>
+              </div>
+              <div style="text-align: center;">
+                <img src="data:${d.mimeType};base64,${base64Data}" style="max-width: 100%; max-height: 220mm; object-fit: contain; border: 1px solid #cbd5e0; border-radius: 4px;" alt="${label}" />
+              </div>
+            </div>
+          `);
+        } else {
+          docPages.push(`
+            <div style="page-break-before: always; padding: 40px; font-family: sans-serif;">
+              <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 24px;">
+                <span style="font-weight: bold; font-size: 16px; color: #1a365d;">${label} (${d.originalName})</span>
+              </div>
+              <div style="padding: 24px; background: #f7fafc; border: 1px dashed #cbd5e0; border-radius: 8px; text-align: center; color: #4a5568;">
+                <p style="font-size: 14px; font-weight: bold;">[Attached Document: ${d.originalName}]</p>
+                <p style="font-size: 12px; margin-top: 8px;">Document size: ${(d.sizeBytes / 1024).toFixed(1)} KB · Annexure Bundle</p>
+              </div>
+            </div>
+          `);
+        }
+      } catch {
+        // file reading error handling
+      }
+    }
+
+    bundleHtml += `
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    bundleHtml += docPages.join('');
+
+    const pdfBuffer = await generateDocumentPdf(
+      bundleHtml,
+      `JanDastavej - ${session.templateSlug} with Annexures`
+    );
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="JanDastavej-${session.templateSlug}-Bundle.pdf"`
+    );
+    res.send(pdfBuffer);
+  } catch (err) {
+    next(err);
+  }
+});
+

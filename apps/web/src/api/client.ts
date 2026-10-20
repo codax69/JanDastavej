@@ -132,4 +132,117 @@ export const api = {
 
     return res.blob();
   },
+
+  // Citizen User Documents & Consents (Feature Addendum 2)
+  async getConsents(): Promise<{ data: any[] }> {
+    return request<{ data: any[] }>('/me/consents');
+  },
+
+  async updateConsents(
+    scopes: Array<{ scope: 'process' | 'keep' | 'ai_assist'; granted: boolean }>,
+    noticeVersion = '2026.1-DPDPA'
+  ): Promise<{ data: any[] }> {
+    return request<{ data: any[] }>('/me/consents', {
+      method: 'POST',
+      body: JSON.stringify({ scopes, noticeVersion }),
+    });
+  },
+
+  async uploadDocument(file: File, docType = 'other', kept = false): Promise<{ data: { document: any; extraction: any } }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('docType', docType);
+    if (kept) formData.append('kept', 'true');
+
+    const res = await fetch(`${BASE_URL}/me/documents`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      let errorData: any = null;
+      try {
+        errorData = await res.json();
+      } catch {}
+      throw new ApiClientError(
+        errorData?.error?.message || 'Failed to upload document.',
+        errorData?.error?.code || 'UPLOAD_FAILED'
+      );
+    }
+    return res.json();
+  },
+
+  async getMyDocuments(): Promise<{ data: any[] }> {
+    return request<{ data: any[] }>('/me/documents');
+  },
+
+  async getDocument(id: string): Promise<{ data: any }> {
+    return request<{ data: any }>(`/me/documents/${id}`);
+  },
+
+  async getDocumentExtraction(id: string): Promise<{ data: any }> {
+    return request<{ data: any }>(`/me/documents/${id}/extraction`);
+  },
+
+  async keepDocument(id: string, days?: number): Promise<{ data: any }> {
+    return request<{ data: any }>(`/me/documents/${id}/keep`, {
+      method: 'POST',
+      body: JSON.stringify({ days }),
+    });
+  },
+
+  async unkeepDocument(id: string): Promise<{ data: any }> {
+    return request<{ data: any }>(`/me/documents/${id}/unkeep`, {
+      method: 'POST',
+    });
+  },
+
+  async deleteDocument(id: string): Promise<{ message: string }> {
+    return request<{ message: string }>(`/me/documents/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async deleteAllMyData(): Promise<{ message: string; deletedCount: number }> {
+    return request<{ message: string; deletedCount: number }>('/me/data', {
+      method: 'DELETE',
+    });
+  },
+
+  async applyExtraction(
+    sessionId: string,
+    items: Array<{ fieldKey: string; value: string }>
+  ): Promise<{ data: any }> {
+    return request<{ data: any }>(`/generations/${sessionId}/apply-extraction`, {
+      method: 'POST',
+      body: JSON.stringify({ items }),
+    });
+  },
+
+  async bundleAnnexures(sessionId: string, annexureDocIds: string[]): Promise<Blob> {
+    const url = `${BASE_URL}/generations/${sessionId}/bundle`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ annexureDocIds }),
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      let errJson: any;
+      try {
+        errJson = await res.json();
+      } catch {}
+      throw new ApiClientError(
+        errJson?.error?.message || 'Failed to bundle annexures with affidavit.',
+        errJson?.error?.code || 'BUNDLE_FAILED'
+      );
+    }
+
+    return res.blob();
+  },
 };
+

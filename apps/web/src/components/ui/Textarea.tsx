@@ -3,7 +3,7 @@ import { AlertCircle } from 'lucide-react';
 import { cn } from '../../lib/utils.js';
 
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  label?: string;
+  label?: React.ReactNode;
   requiredText?: string;
   error?: string;
   helpText?: string;

@@ -9,6 +9,13 @@ export const ErrorCodeSchema = z.enum([
   'RATE_LIMITED',
   'PDF_UNAVAILABLE',
   'INTERNAL_ERROR',
+  'CONSENT_REQUIRED',
+  'FILE_UNSAFE',
+  'FILE_TYPE_NOT_ALLOWED',
+  'FILE_TOO_LARGE',
+  'QUOTA_EXCEEDED',
+  'EXTRACTION_FAILED',
+  'DOCUMENT_EXPIRED',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 

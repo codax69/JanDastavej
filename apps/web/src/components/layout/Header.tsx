@@ -1,17 +1,34 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Globe, Shield, HelpCircle, Trash2, FileText, Menu, X, Sparkles } from 'lucide-react';
+import {
+  Globe,
+  Shield,
+  HelpCircle,
+  Trash2,
+  FileText,
+  Menu,
+  X,
+  Sparkles,
+  HardDrive,
+  User,
+  LogOut,
+  LogIn,
+} from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext.js';
 import { useSessionReuse } from '../../context/SessionReuseContext.js';
+import { useCitizenAuth } from '../../context/CitizenAuthContext.js';
 import { Button } from '../ui/Button.js';
+import { CitizenAuthModal } from '../auth/CitizenAuthModal.js';
 
 export function Header() {
   const { language, toggleLanguage } = useLanguage();
   const { savedAnswers, clearAllData } = useSessionReuse();
+  const { citizen, logout } = useCitizenAuth();
   const location = useLocation();
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showCitizenAuth, setShowCitizenAuth] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const hasStoredData = Object.keys(savedAnswers).length > 0;
@@ -61,6 +78,17 @@ export function Header() {
               </Button>
             </Link>
 
+            <Link to="/my-documents">
+              <Button
+                variant={location.pathname === '/my-documents' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="gap-1.5"
+              >
+                <HardDrive className="h-4 w-4" />
+                <span>{language === 'gu' ? 'મારા દસ્તાવેજો' : 'My Documents'}</span>
+              </Button>
+            </Link>
+
             <Button
               variant="ghost"
               size="sm"
@@ -94,8 +122,38 @@ export function Header() {
               </Button>
             )}
 
+            {/* Citizen Auth Status */}
+            <div className="ml-1 pl-1 border-l border-border flex items-center gap-1.5">
+              {citizen ? (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground max-w-[120px] truncate" title={citizen.identifier}>
+                    {citizen.identifier}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={logout}
+                    className="h-8 px-2 text-destructive hover:bg-destructive/10"
+                    title={language === 'gu' ? 'બહાર નીકળો' : 'Sign Out'}
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCitizenAuth(true)}
+                  className="gap-1.5 h-8 text-xs border-primary/30 text-primary"
+                >
+                  <LogIn className="h-3.5 w-3.5" />
+                  <span>{language === 'gu' ? 'પ્રવેશ' : 'Sign In'}</span>
+                </Button>
+              )}
+            </div>
+
             {/* Language Switcher */}
-            <div className="ml-2 pl-2 border-l border-border">
+            <div className="ml-1 pl-1 border-l border-border">
               <Button
                 variant="secondary"
                 size="sm"
@@ -152,6 +210,39 @@ export function Header() {
               <Sparkles className="h-4 w-4 text-primary" />
               <span>{language === 'gu' ? 'નવું ફોર્મેટ (AI)' : 'Submit Format (AI)'}</span>
             </Link>
+            <Link
+              to="/my-documents"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted"
+            >
+              <HardDrive className="h-4 w-4 text-primary" />
+              <span>{language === 'gu' ? 'મારા દસ્તાવેજો' : 'My Documents'}</span>
+            </Link>
+            {citizen ? (
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-destructive hover:bg-destructive/10 text-left"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>{language === 'gu' ? 'બહાર નીકળો' : 'Sign Out'} ({citizen.identifier})</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCitizenAuth(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-primary hover:bg-primary/10 text-left"
+              >
+                <LogIn className="h-4 w-4" />
+                <span>{language === 'gu' ? 'નાગરિક પ્રવેશ (OTP)' : 'Citizen Sign In'}</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => {
@@ -297,6 +388,12 @@ export function Header() {
           </div>
         </div>
       )}
+
+      {/* Citizen Authentication Modal */}
+      <CitizenAuthModal
+        isOpen={showCitizenAuth}
+        onClose={() => setShowCitizenAuth(false)}
+      />
     </>
   );
 }
