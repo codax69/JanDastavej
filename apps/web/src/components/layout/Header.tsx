@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Globe, Shield, HelpCircle, Trash2, FileText, Menu, X } from 'lucide-react';
+import { Globe, Shield, HelpCircle, Trash2, FileText, Menu, X, Sparkles } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext.js';
 import { useSessionReuse } from '../../context/SessionReuseContext.js';
 import { Button } from '../ui/Button.js';
@@ -47,6 +47,17 @@ export function Header() {
               >
                 <FileText className="h-4 w-4" />
                 <span>{language === 'gu' ? 'દસ્તાવેજ લાઇબ્રેરી' : 'Templates'}</span>
+              </Button>
+            </Link>
+
+            <Link to="/submit-format">
+              <Button
+                variant={location.pathname === '/submit-format' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="gap-1.5"
+              >
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span>{language === 'gu' ? 'નવું ફોર્મેટ (AI)' : 'Submit Format (AI)'}</span>
               </Button>
             </Link>
 
@@ -132,6 +143,14 @@ export function Header() {
             >
               <FileText className="h-4 w-4 text-primary" />
               <span>{language === 'gu' ? 'દસ્તાવેજ લાઇબ્રેરી' : 'Templates'}</span>
+            </Link>
+            <Link
+              to="/submit-format"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted"
+            >
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span>{language === 'gu' ? 'નવું ફોર્મેટ (AI)' : 'Submit Format (AI)'}</span>
             </Link>
             <button
               type="button"

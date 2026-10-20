@@ -13,6 +13,9 @@ import { AdminLoginPage } from './features/admin/AdminLoginPage.js';
 import { AdminTemplatesPage } from './features/admin/AdminTemplatesPage.js';
 import { AdminTemplateEditorPage } from './features/admin/AdminTemplateEditorPage.js';
 import { AdminAuditPage } from './features/admin/AdminAuditPage.js';
+import { SubmitDocumentPage } from './features/submissions/SubmitDocumentPage.js';
+import { AdminSubmissionsPage } from './features/admin/AdminSubmissionsPage.js';
+import { AdminSubmissionReviewPage } from './features/admin/AdminSubmissionReviewPage.js';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,11 +40,14 @@ export default function App() {
                 <Route path="/documents/:slug" element={<DocumentDetailPage />} />
                 <Route path="/create/:templateId" element={<DynamicFormPage />} />
                 <Route path="/preview/:sessionId" element={<PreviewPage />} />
+                <Route path="/submit-format" element={<SubmitDocumentPage />} />
 
                 {/* Admin Routes */}
                 <Route path="/admin/login" element={<AdminLoginPage />} />
                 <Route path="/admin/templates" element={<AdminTemplatesPage />} />
                 <Route path="/admin/templates/:id" element={<AdminTemplateEditorPage />} />
+                <Route path="/admin/submissions" element={<AdminSubmissionsPage />} />
+                <Route path="/admin/submissions/:id" element={<AdminSubmissionReviewPage />} />
                 <Route path="/admin/audit" element={<AdminAuditPage />} />
 
                 <Route path="*" element={<Navigate to="/" replace />} />

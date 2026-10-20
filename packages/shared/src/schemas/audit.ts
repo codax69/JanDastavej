@@ -19,7 +19,7 @@ export const AuditEventSchema = z.object({
   actorUserId: z.string().optional(),
   actorEmail: z.string().optional(),
   action: AuditActionSchema,
-  entityType: z.enum(['template', 'template_version', 'auth', 'system']),
+  entityType: z.enum(['template', 'template_version', 'auth', 'submission', 'system']),
   entityId: z.string(),
   version: z.number().optional(),
   reason: z.string().optional(),

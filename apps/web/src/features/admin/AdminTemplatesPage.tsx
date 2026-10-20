@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Shield, LogOut, Eye, ArrowLeft, Trash2, Search, Filter, AlertTriangle, X } from 'lucide-react';
+import { Plus, Shield, LogOut, Eye, ArrowLeft, Trash2, Search, Filter, AlertTriangle, X, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/Button.js';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card.js';
 import { Badge } from '../../components/ui/Badge.js';
@@ -180,8 +180,15 @@ export function AdminTemplatesPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
+          <Link to="/admin/submissions">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span>AI Submissions</span>
+            </Button>
+          </Link>
+
           <Link to="/admin/audit">
-            <Button variant="outline" size="sm" className="gap-1.5">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs">
               <Shield className="h-4 w-4" />
               <span>Audit Log</span>
             </Button>

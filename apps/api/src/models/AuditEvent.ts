@@ -4,7 +4,7 @@ export interface IAuditEvent extends Document {
   actorUserId?: Types.ObjectId;
   actorEmail?: string;
   action: string;
-  entityType: 'template' | 'template_version' | 'auth' | 'system';
+  entityType: 'template' | 'template_version' | 'auth' | 'submission' | 'system';
   entityId: string;
   version?: number;
   reason?: string;
@@ -17,7 +17,7 @@ const AuditEventSchema = new Schema<IAuditEvent>(
     actorUserId: { type: Schema.Types.ObjectId, ref: 'User' },
     actorEmail: { type: String },
     action: { type: String, required: true, index: true },
-    entityType: { type: String, enum: ['template', 'template_version', 'auth', 'system'], required: true },
+    entityType: { type: String, enum: ['template', 'template_version', 'auth', 'submission', 'system'], required: true },
     entityId: { type: String, required: true, index: true },
     version: { type: Number },
     reason: { type: String },

@@ -6,11 +6,14 @@ import {
   JanDastavejError,
   LoginRequestSchema,
   TemplateVersionSchema,
+  ApproveSubmissionRequestSchema,
 } from '@jandastavej/shared';
 import { UserModel } from '../../models/User.js';
 import { TemplateModel, ITemplate } from '../../models/Template.js';
 import { TemplateVersionModel, ITemplateVersion } from '../../models/TemplateVersion.js';
 import { AuditEventModel } from '../../models/AuditEvent.js';
+import { DocumentSubmissionModel } from '../../models/DocumentSubmission.js';
+import { aiScannerService } from '../../services/aiScanner.js';
 import { requireAuth, requireRole, AuthenticatedRequest } from './auth.middleware.js';
 
 export const adminRouter = Router();
@@ -727,3 +730,244 @@ adminRouter.delete(
     }
   }
 );
+
+// GET /api/v1/admin/submissions - List citizen document submissions & AI scans
+adminRouter.get(
+  '/submissions',
+  requireAuth,
+  requireRole(['admin', 'template_admin', 'approver']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { status } = req.query;
+      const filter: Record<string, any> = {};
+      if (status && typeof status === 'string' && status !== 'all') {
+        filter.status = status;
+      }
+
+      const submissions = await DocumentSubmissionModel.find(filter)
+        .sort({ createdAt: -1 })
+        .lean();
+
+      res.json({ data: submissions, total: submissions.length });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// GET /api/v1/admin/submissions/:id - Get detail of submission with AI scan
+adminRouter.get(
+  '/submissions/:id',
+  requireAuth,
+  requireRole(['admin', 'template_admin', 'approver']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const submission = await DocumentSubmissionModel.findById(id).lean();
+      if (!submission) {
+        throw new JanDastavejError('NOT_FOUND', 'Submission not found.', 404);
+      }
+      res.json({ data: submission });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /api/v1/admin/submissions/:id/rescan - Re-trigger AI scan on submitted document
+adminRouter.post(
+  '/submissions/:id/rescan',
+  requireAuth,
+  requireRole(['admin', 'template_admin']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const submission = await DocumentSubmissionModel.findById(id);
+      if (!submission) {
+        throw new JanDastavejError('NOT_FOUND', 'Submission not found.', 404);
+      }
+
+      const aiScanResult = await aiScannerService.scanDocument({
+        titleHint: req.body?.titleHint || submission.documentTitle,
+        text: submission.documentText,
+        categoryHint: req.body?.categoryHint || submission.category,
+      });
+
+      submission.aiScanResult = aiScanResult;
+      submission.status = 'scanned';
+      await submission.save();
+
+      res.json({ data: submission });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /api/v1/admin/submissions/:id/approve - Approve AI-scanned submission & publish live template
+adminRouter.post(
+  '/submissions/:id/approve',
+  requireAuth,
+  requireRole(['admin', 'template_admin', 'approver']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const submission = await DocumentSubmissionModel.findById(id);
+      if (!submission) {
+        throw new JanDastavejError('NOT_FOUND', 'Submission not found.', 404);
+      }
+
+      const parseResult = ApproveSubmissionRequestSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        throw new JanDastavejError(
+          'VALIDATION_ERROR',
+          parseResult.error.errors[0]?.message || 'Invalid template approval parameters.',
+          400
+        );
+      }
+
+      const {
+        title,
+        titleGu,
+        category,
+        description,
+        descriptionGu,
+        purpose,
+        purposeGu,
+        fields,
+        layoutKey,
+        requiredDocuments,
+        nextSteps,
+        nextStepsGu,
+      } = parseResult.data;
+
+      // Generate unique slug
+      let baseSlug = (parseResult.data.slug || title)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+      if (baseSlug.length < 3) baseSlug = `template-${Date.now().toString(36)}`;
+
+      let candidateSlug = baseSlug;
+      let counter = 1;
+      while (await TemplateModel.findOne({ slug: candidateSlug })) {
+        counter++;
+        candidateSlug = `${baseSlug}-${counter}`;
+      }
+
+      // 1. Create Template Record
+      const template = await TemplateModel.create({
+        slug: candidateSlug,
+        title,
+        titleGu,
+        category,
+        description: description || title,
+        descriptionGu: descriptionGu || titleGu,
+        purpose,
+        purposeGu,
+        requiredDocuments: requiredDocuments || [],
+        nextSteps,
+        nextStepsGu,
+        supportedLanguages: ['gu', 'en'],
+        status: 'active',
+        isDemoOnly: true,
+        createdBy: req.user!._id,
+      });
+
+      // 2. Create Published Version 1
+      const version = await TemplateVersionModel.create({
+        templateId: template._id,
+        version: 1,
+        language: 'gu',
+        fields,
+        layoutKey: layoutKey || 'sample_declaration',
+        sourceReference: 'Gandhinagar Collector Office - Citizen Submitted & AI Verified Format',
+        status: 'published',
+        publishedAt: new Date(),
+        reviewedBy: req.user!._id,
+        createdBy: req.user!._id,
+      });
+
+      // 3. Link Version to Template
+      template.currentPublishedVersionId = version._id as any;
+      template.currentVersionNumber = 1;
+      await template.save();
+
+      // 4. Update Submission status
+      submission.status = 'approved';
+      submission.createdTemplateId = template._id as any;
+      submission.reviewedBy = req.user!._id as any;
+      submission.reviewedAt = new Date();
+      await submission.save();
+
+      // 5. Audit Log
+      await AuditEventModel.create({
+        actorUserId: req.user!._id,
+        actorEmail: req.user!.email,
+        action: 'TEMPLATE_CREATED',
+        entityType: 'submission',
+        entityId: String(submission._id),
+        version: 1,
+        timestamp: new Date(),
+        metadata: {
+          submissionId: String(submission._id),
+          templateId: String(template._id),
+          slug: template.slug,
+        },
+      });
+
+      res.status(201).json({
+        data: {
+          template,
+          version,
+          submission,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /api/v1/admin/submissions/:id/reject - Reject submission with reason
+adminRouter.post(
+  '/submissions/:id/reject',
+  requireAuth,
+  requireRole(['admin', 'template_admin', 'approver']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
+        throw new JanDastavejError('VALIDATION_ERROR', 'A rejection reason is required.', 400);
+      }
+
+      const submission = await DocumentSubmissionModel.findById(id);
+      if (!submission) {
+        throw new JanDastavejError('NOT_FOUND', 'Submission not found.', 404);
+      }
+
+      submission.status = 'rejected';
+      submission.rejectionReason = reason.trim();
+      submission.reviewedBy = req.user!._id as any;
+      submission.reviewedAt = new Date();
+      await submission.save();
+
+      await AuditEventModel.create({
+        actorUserId: req.user!._id,
+        actorEmail: req.user!.email,
+        action: 'VERSION_REJECTED',
+        entityType: 'submission',
+        entityId: String(submission._id),
+        reason: reason.trim(),
+        timestamp: new Date(),
+      });
+
+      res.json({ data: submission });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+

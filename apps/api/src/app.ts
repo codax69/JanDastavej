@@ -10,6 +10,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { templatesRouter } from './modules/templates/templates.router.js';
 import { generationsRouter } from './modules/generations/generations.router.js';
 import { adminRouter } from './modules/admin/admin.router.js';
+import { submissionsRouter } from './modules/submissions/submissions.router.js';
 
 export const app = express();
 
@@ -69,6 +70,7 @@ app.get(['/admin', '/admin/*'], (_req: Request, res: Response) => {
 // Public routers
 app.use('/api/v1/templates', templatesRouter);
 app.use('/api/v1/generations', generationsRouter);
+app.use('/api/v1/submissions', submissionsRouter);
 
 // Admin router (role checked server-side)
 app.use('/api/v1/admin', adminRouter);

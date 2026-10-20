@@ -5,5 +5,6 @@ export * from './schemas/template.js';
 export * from './schemas/generation.js';
 export * from './schemas/auth.js';
 export * from './schemas/audit.js';
+export * from './schemas/submission.js';
 export * from './validators/answers.js';
 export * from './renderers/documentRenderer.js';
