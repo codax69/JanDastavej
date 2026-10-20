@@ -134,3 +134,52 @@ describe('Generations API', () => {
     expect(acceptRes.body.length).toBeGreaterThan(1000);
   });
 });
+
+describe('Stage 6: Gujarati Font & Regression Strings (TRD §10)', () => {
+  it('correctly renders complex Gujarati conjuncts and long multi-line text in PDF', async () => {
+    const gujaratiTestStrings = {
+      fullName: 'શ્રીમતી ક્ષત્રિય જ્ઞાનદાબેન દસ્તાવેજવાળા',
+      parentSpouseName: 'સ્વ. પ્રહલાદભાઈ ક્ષત્રિય',
+      age: 48,
+      occupation: 'સરકારી સેવા અને સામાજિક કાર્યકર',
+      address: 'બ્લોક નં. ૪૫/બી, ઘ-૫ સર્કલ પાસે, શ્રીનાથજી સોસાયટી, સેક્ટર ૨૮, ગાંધીનગર, ગુજરાત - ૩૮૨૦૨૮\n(કાયમી રહેઠાણ પુરાવા સાથે)',
+      declarationPurpose: 'પ્રતિજ્ઞાપત્ર અને ઘોષણાપત્ર ચકાસણી હેતુ: આથી હું જાહેર કરું છું કે મારૂં પૂર્ણ નામ, સરનામું અને તારીખ સાચાં છે.',
+      declarationDate: '2026-10-20',
+      place: 'ગાંધીનગર',
+    };
+
+    const previewRes = await request(app)
+      .post('/api/v1/generations/preview')
+      .send({
+        templateVersionId: publishedVersionId,
+        answers: gujaratiTestStrings,
+        language: 'gu',
+      });
+
+    expect(previewRes.status).toBe(200);
+    const html = previewRes.body.data.previewHtml;
+
+    // Check all TRD §10 test strings are present in rendered output
+    expect(html).toContain('શ્રીમતી');
+    expect(html).toContain('ક્ષત્રિય');
+    expect(html).toContain('જ્ઞાનદાબેન');
+    expect(html).toContain('દસ્તાવેજ');
+    expect(html).toContain('પ્રતિજ્ઞાપત્ર');
+    expect(html).toContain('ઘોષણાપત્ર');
+    expect(html).toContain('પૂર્ણ નામ');
+    expect(html).toContain('સરનામું');
+    expect(html).toContain('તારીખ');
+
+    // Generate PDF with these strings
+    const pdfRes = await request(app)
+      .post('/api/v1/generations/pdf')
+      .send({
+        sessionId: previewRes.body.data.sessionId,
+        disclaimerAccepted: true,
+      });
+
+    expect(pdfRes.status).toBe(200);
+    expect(pdfRes.headers['content-type']).toBe('application/pdf');
+    expect(pdfRes.body.length).toBeGreaterThan(15000);
+  });
+});
