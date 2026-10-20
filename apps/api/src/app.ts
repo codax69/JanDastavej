@@ -8,6 +8,7 @@ import { logger } from './config/logger.js';
 import { requestIdMiddleware } from './middleware/requestId.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { templatesRouter } from './modules/templates/templates.router.js';
+import { generationsRouter } from './modules/generations/generations.router.js';
 
 export const app = express();
 
@@ -59,8 +60,9 @@ app.get('/api/v1/health', (_req: Request, res: Response) => {
   });
 });
 
-// Template routes
+// Mount routers
 app.use('/api/v1/templates', templatesRouter);
+app.use('/api/v1/generations', generationsRouter);
 
 // Standard error handler
 app.use(errorHandler);

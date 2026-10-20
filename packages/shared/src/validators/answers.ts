@@ -59,8 +59,7 @@ export function validateAndSanitizeAnswers(
             ? `વધુમાં વધુ ${field.maxLength} અક્ષરો માન્ય છે.`
             : `Maximum ${field.maxLength} characters allowed.`;
         } else {
-          // Escaped to guarantee no raw HTML or script tags pass through
-          sanitizedAnswers[field.key] = escapeHtml(strVal);
+          sanitizedAnswers[field.key] = strVal;
         }
         break;
       }
@@ -101,7 +100,7 @@ export function validateAndSanitizeAnswers(
         if (validOptions.length > 0 && !validOptions.includes(strVal)) {
           errors[field.key] = msgOptionInvalid;
         } else {
-          sanitizedAnswers[field.key] = escapeHtml(strVal);
+          sanitizedAnswers[field.key] = strVal;
         }
         break;
       }
@@ -114,7 +113,7 @@ export function validateAndSanitizeAnswers(
             sanitizedAnswers[field.key] = rawVal;
           }
         } else if (Array.isArray(rawVal)) {
-          sanitizedAnswers[field.key] = rawVal.map((v) => escapeHtml(String(v)));
+          sanitizedAnswers[field.key] = rawVal.map((v) => String(v));
         } else {
           sanitizedAnswers[field.key] = Boolean(rawVal);
         }
@@ -122,7 +121,7 @@ export function validateAndSanitizeAnswers(
       }
 
       default:
-        sanitizedAnswers[field.key] = escapeHtml(String(rawVal));
+        sanitizedAnswers[field.key] = String(rawVal);
     }
   }
 

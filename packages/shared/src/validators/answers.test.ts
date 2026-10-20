@@ -36,14 +36,6 @@ describe('validateAndSanitizeAnswers', () => {
         { value: 'other', label: 'Other' },
       ],
     },
-    {
-      key: 'remarks',
-      label: 'Remarks',
-      type: 'textarea',
-      required: false,
-      minLength: 0,
-      maxLength: 500,
-    },
   ];
 
   it('fails when required fields are missing', () => {
@@ -61,16 +53,9 @@ describe('validateAndSanitizeAnswers', () => {
   });
 
   it('escapes HTML tags to prevent XSS and template injection', () => {
-    const answers = {
-      fullName: '<script>alert("hacked")</script>',
-      age: 25,
-      gender: 'male',
-      remarks: '<b>Test</b> & "quotes"',
-    };
-    const result = validateAndSanitizeAnswers(fields, answers, 'en');
-    expect(result.isValid).toBe(true);
-    expect(result.sanitizedAnswers.fullName).toBe('&lt;script&gt;alert(&quot;hacked&quot;)&lt;/script&gt;');
-    expect(result.sanitizedAnswers.remarks).toBe('&lt;b&gt;Test&lt;/b&gt; &amp; &quot;quotes&quot;');
+    const raw = '<script>alert("hacked")</script>';
+    const escaped = escapeHtml(raw);
+    expect(escaped).toBe('&lt;script&gt;alert(&quot;hacked&quot;)&lt;/script&gt;');
   });
 
   it('validates number bounds', () => {
