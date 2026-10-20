@@ -539,3 +539,191 @@ adminRouter.get(
     }
   }
 );
+
+// PATCH /api/v1/admin/templates/:id - Update template metadata
+adminRouter.patch(
+  '/templates/:id',
+  requireAuth,
+  requireRole(['admin', 'template_admin']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const template = await TemplateModel.findById(id);
+      if (!template) {
+        throw new JanDastavejError('NOT_FOUND', 'Template not found', 404);
+      }
+
+      const {
+        title,
+        titleGu,
+        description,
+        descriptionGu,
+        category,
+        purpose,
+        purposeGu,
+        requiredDocuments,
+        requiredDocumentsGu,
+        nextSteps,
+        nextStepsGu,
+        status,
+      } = req.body;
+
+      if (title) template.title = title;
+      if (titleGu) template.titleGu = titleGu;
+      if (description) template.description = description;
+      if (descriptionGu) template.descriptionGu = descriptionGu;
+      if (category) template.category = category;
+      if (purpose !== undefined) template.purpose = purpose;
+      if (purposeGu !== undefined) template.purposeGu = purposeGu;
+      if (requiredDocuments) template.requiredDocuments = requiredDocuments;
+      if (requiredDocumentsGu) template.requiredDocumentsGu = requiredDocumentsGu;
+      if (nextSteps !== undefined) template.nextSteps = nextSteps;
+      if (nextStepsGu !== undefined) template.nextStepsGu = nextStepsGu;
+      if (status && (status === 'active' || status === 'retired')) template.status = status;
+
+      await template.save();
+
+      await AuditEventModel.create({
+        actorUserId: req.user!._id,
+        actorEmail: req.user!.email,
+        action: 'TEMPLATE_UPDATED',
+        entityType: 'template',
+        entityId: String(template._id),
+        timestamp: new Date(),
+        metadata: { slug: template.slug },
+      });
+
+      res.json({ data: template });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// DELETE /api/v1/admin/templates/:id - Delete template and associated versions
+adminRouter.delete(
+  '/templates/:id',
+  requireAuth,
+  requireRole(['admin']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const template = await TemplateModel.findById(id);
+      if (!template) {
+        throw new JanDastavejError('NOT_FOUND', 'Template not found', 404);
+      }
+
+      const slug = template.slug;
+      await TemplateVersionModel.deleteMany({ templateId: template._id });
+      await TemplateModel.findByIdAndDelete(id);
+
+      await AuditEventModel.create({
+        actorUserId: req.user!._id,
+        actorEmail: req.user!.email,
+        action: 'TEMPLATE_DELETED',
+        entityType: 'template',
+        entityId: id,
+        timestamp: new Date(),
+        reason: req.body?.reason || 'Template deleted by admin',
+        metadata: { slug },
+      });
+
+      res.json({ status: 'ok', message: `Template '${slug}' and all versions deleted.` });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /api/v1/admin/templates/:id/versions - Create new draft version (v2, v3, etc.)
+adminRouter.post(
+  '/templates/:id/versions',
+  requireAuth,
+  requireRole(['admin', 'template_admin']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const template = await TemplateModel.findById(id);
+      if (!template) {
+        throw new JanDastavejError('NOT_FOUND', 'Template not found', 404);
+      }
+
+      // Find highest existing version
+      const highestVersion = (await TemplateVersionModel.findOne({ templateId: template._id })
+        .sort({ version: -1 })
+        .lean()) as (ITemplateVersion & { _id: Types.ObjectId }) | null;
+
+      const nextVersionNum = highestVersion ? highestVersion.version + 1 : 1;
+      const { fields, layoutKey, language = 'gu', sourceReference } = req.body;
+
+      const newFields = Array.isArray(fields) && fields.length > 0
+        ? fields
+        : highestVersion
+        ? highestVersion.fields
+        : [{ key: 'fullName', label: 'Full Name', labelGu: 'પૂર્ણ નામ', type: 'text', required: true }];
+
+      const newVersion = await TemplateVersionModel.create({
+        templateId: template._id,
+        version: nextVersionNum,
+        language,
+        fields: newFields,
+        layoutKey: layoutKey || (highestVersion ? highestVersion.layoutKey : 'sample_declaration'),
+        sourceReference: sourceReference || 'Collector Office, Gandhinagar - Standard Format',
+        status: 'draft',
+        createdBy: req.user!._id,
+      });
+
+      await AuditEventModel.create({
+        actorUserId: req.user!._id,
+        actorEmail: req.user!.email,
+        action: 'TEMPLATE_CREATED',
+        entityType: 'template_version',
+        entityId: String(newVersion._id),
+        version: nextVersionNum,
+        timestamp: new Date(),
+        metadata: { slug: template.slug, version: nextVersionNum },
+      });
+
+      res.status(201).json({ data: newVersion });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// DELETE /api/v1/admin/template-versions/:id - Delete draft or rejected version
+adminRouter.delete(
+  '/template-versions/:id',
+  requireAuth,
+  requireRole(['admin', 'template_admin']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const version = await TemplateVersionModel.findById(id);
+      if (!version) {
+        throw new JanDastavejError('NOT_FOUND', 'Template version not found', 404);
+      }
+
+      if (version.status === 'published') {
+        throw new JanDastavejError('FORBIDDEN', 'Cannot delete published versions. Published versions are immutable audit records.', 403);
+      }
+
+      await TemplateVersionModel.findByIdAndDelete(id);
+
+      await AuditEventModel.create({
+        actorUserId: req.user!._id,
+        actorEmail: req.user!.email,
+        action: 'VERSION_REJECTED',
+        entityType: 'template_version',
+        entityId: id,
+        version: version.version,
+        timestamp: new Date(),
+        reason: 'Draft version deleted by admin',
+      });
+
+      res.json({ status: 'ok', message: `Version ${version.version} deleted.` });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
