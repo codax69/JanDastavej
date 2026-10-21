@@ -13,6 +13,7 @@ import {
   User,
   LogOut,
   LogIn,
+  Layers,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext.js';
 import { useSessionReuse } from '../../context/SessionReuseContext.js';
@@ -40,12 +41,12 @@ export function Header() {
 
   return (
     <>
-      <header className="border-b border-border bg-card sticky top-0 z-40 shadow-xs">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <header className="border-b border-border bg-card/95 backdrop-blur-md sticky top-0 z-40 shadow-xs">
+        <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Brand Wordmark (Strict Rule: Text wordmark only, no fake logos or seals) */}
           <div className="flex items-center gap-3">
             <Link to="/" className="flex flex-col group">
-              <span className="text-xl sm:text-2xl font-black text-primary tracking-tight group-hover:text-[#17304F]">
+              <span className="text-xl sm:text-2xl font-black text-primary tracking-tight group-hover:text-primary/80 transition-colors">
                 JanDastavej
               </span>
               <span className="text-[11px] text-muted-foreground font-medium -mt-1 hidden sm:inline">
@@ -55,12 +56,23 @@ export function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-1.5">
+            <Link to="/services">
+              <Button
+                variant={location.pathname.startsWith('/services') ? 'secondary' : 'ghost'}
+                size="sm"
+                className="gap-1.5 text-xs font-semibold"
+              >
+                <Layers className="h-4 w-4 text-primary" />
+                <span>{language === 'gu' ? 'સેવાઓ' : 'Services'}</span>
+              </Button>
+            </Link>
+
             <Link to="/documents">
               <Button
                 variant={location.pathname === '/documents' ? 'secondary' : 'ghost'}
                 size="sm"
-                className="gap-1.5"
+                className="gap-1.5 text-xs font-semibold"
               >
                 <FileText className="h-4 w-4" />
                 <span>{language === 'gu' ? 'દસ્તાવેજ લાઇબ્રેરી' : 'Templates'}</span>
@@ -71,10 +83,10 @@ export function Header() {
               <Button
                 variant={location.pathname === '/submit-format' ? 'secondary' : 'ghost'}
                 size="sm"
-                className="gap-1.5"
+                className="gap-1.5 text-xs font-semibold"
               >
                 <Sparkles className="h-4 w-4 text-primary" />
-                <span>{language === 'gu' ? 'નવું ફોર્મેટ (AI)' : 'Submit Format (AI)'}</span>
+                <span>{language === 'gu' ? 'નવું ફોર્મેટ ઉમેરો' : 'Submit Template'}</span>
               </Button>
             </Link>
 
@@ -82,18 +94,32 @@ export function Header() {
               <Button
                 variant={location.pathname === '/my-documents' ? 'secondary' : 'ghost'}
                 size="sm"
-                className="gap-1.5"
+                className="gap-1.5 text-xs font-semibold"
               >
                 <HardDrive className="h-4 w-4" />
                 <span>{language === 'gu' ? 'મારા દસ્તાવેજો' : 'My Documents'}</span>
               </Button>
             </Link>
 
+            {/* Admin Management Quick Link */}
+            <div className="relative group">
+              <Link to="/admin/templates">
+                <Button
+                  variant={location.pathname.startsWith('/admin') ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="gap-1 text-xs font-semibold border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary"
+                >
+                  <Shield className="h-3.5 w-3.5" />
+                  <span>Admin</span>
+                </Button>
+              </Link>
+            </div>
+
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowHelp(true)}
-              className="gap-1.5"
+              className="gap-1.5 text-xs"
             >
               <HelpCircle className="h-4 w-4" />
               <span>{language === 'gu' ? 'સહાય' : 'Help'}</span>
@@ -103,7 +129,7 @@ export function Header() {
               variant="ghost"
               size="sm"
               onClick={() => setShowPrivacy(true)}
-              className="gap-1.5"
+              className="gap-1.5 text-xs"
             >
               <Shield className="h-4 w-4" />
               <span>{language === 'gu' ? 'ગોપનીયતા' : 'Privacy'}</span>
@@ -114,11 +140,11 @@ export function Header() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowClearConfirm(true)}
-                className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1.5 ml-1"
+                className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1.5 ml-1 text-xs"
                 title={language === 'gu' ? 'તમારો સાચવેલ ડેટા સાફ કરો' : 'Clear stored session data'}
               >
-                <Trash2 className="h-4 w-4" />
-                <span>{language === 'gu' ? 'ડેટા સાફ કરો' : 'Clear Data'}</span>
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>{language === 'gu' ? 'ડેટા સાફ' : 'Clear'}</span>
               </Button>
             )}
 
@@ -195,6 +221,14 @@ export function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-border bg-card px-4 py-3 space-y-2">
             <Link
+              to="/services"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted"
+            >
+              <Layers className="h-4 w-4 text-primary" />
+              <span>{language === 'gu' ? 'સેવાઓ' : 'Services'}</span>
+            </Link>
+            <Link
               to="/documents"
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted"
@@ -208,7 +242,7 @@ export function Header() {
               className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted"
             >
               <Sparkles className="h-4 w-4 text-primary" />
-              <span>{language === 'gu' ? 'નવું ફોર્મેટ (AI)' : 'Submit Format (AI)'}</span>
+              <span>{language === 'gu' ? 'નવું ફોર્મેટ ઉમેરો' : 'Submit Template'}</span>
             </Link>
             <Link
               to="/my-documents"
@@ -217,6 +251,14 @@ export function Header() {
             >
               <HardDrive className="h-4 w-4 text-primary" />
               <span>{language === 'gu' ? 'મારા દસ્તાવેજો' : 'My Documents'}</span>
+            </Link>
+            <Link
+              to="/admin/templates"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-primary hover:bg-primary/10"
+            >
+              <Shield className="h-4 w-4 text-primary" />
+              <span>Admin Portal</span>
             </Link>
             {citizen ? (
               <button

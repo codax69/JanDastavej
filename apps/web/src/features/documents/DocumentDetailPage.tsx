@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, CheckCircle, FileText, Info, AlertTriangle, ShieldCheck, Clock } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, FileText, Info, AlertTriangle, ShieldCheck, Clock, Flag, Send } from 'lucide-react';
 import { api } from '../../api/client.js';
 import { useLanguage } from '../../context/LanguageContext.js';
 import { StepIndicator } from '../../components/shared/StepIndicator.js';
@@ -9,11 +9,52 @@ import { Button } from '../../components/ui/Button.js';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card.js';
 import { Badge } from '../../components/ui/Badge.js';
 import { Alert } from '../../components/ui/Alert.js';
+import { Input } from '../../components/ui/Input.js';
+import { Textarea } from '../../components/ui/Textarea.js';
+import { Select } from '../../components/ui/Select.js';
 
 export function DocumentDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const { language } = useLanguage();
   const navigate = useNavigate();
+
+  const [showReportForm, setShowReportForm] = useState(false);
+  const [issueType, setIssueType] = useState<'outdated_format' | 'incorrect_wording' | 'legal_change' | 'broken_placeholder' | 'other'>('outdated_format');
+  const [reportDescription, setReportDescription] = useState('');
+  const [sourceProofUrl, setSourceProofUrl] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [reportSuccess, setReportSuccess] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
+
+  const handleReportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!slug || !reportDescription.trim()) return;
+
+    setIsSubmittingReport(true);
+    setReportError(null);
+
+    try {
+      await api.reportTemplate(slug, {
+        issueType,
+        description: reportDescription.trim(),
+        sourceProofUrl: sourceProofUrl.trim() || undefined,
+        contactEmail: contactEmail.trim() || undefined,
+      });
+      setReportSuccess(true);
+      setTimeout(() => {
+        setShowReportForm(false);
+        setReportSuccess(false);
+        setReportDescription('');
+        setSourceProofUrl('');
+        setContactEmail('');
+      }, 3000);
+    } catch (err: any) {
+      setReportError(err.message || 'Failed to submit report. Please try again.');
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['template-detail', slug, language],
@@ -159,8 +200,19 @@ export function DocumentDetailPage() {
             </div>
           </div>
 
-          {/* Primary Start CTA Button */}
-          <div className="pt-4 flex justify-end">
+          {/* Primary Start CTA & Report Buttons */}
+          <div className="pt-4 flex flex-wrap items-center justify-between gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowReportForm(!showReportForm)}
+              className="gap-2 text-muted-foreground hover:text-destructive"
+            >
+              <Flag className="h-4 w-4" />
+              <span>{language === 'gu' ? 'સમસ્યા અથવા જૂનો ફોર્મેટ રિપોર્ટ કરો' : 'Report an Issue / Outdated Format'}</span>
+            </Button>
+
             <Button
               size="lg"
               onClick={() => navigate(`/create/${template.slug}`)}
@@ -170,8 +222,121 @@ export function DocumentDetailPage() {
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* Collapsible Issue Reporting Form */}
+          {showReportForm && (
+            <div className="mt-4 p-4 rounded-lg border border-border bg-muted/40 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                  <AlertTriangle className="h-4 w-4 text-warning" />
+                  <span>{language === 'gu' ? 'ટેમ્પ્લેટ અંગે સમસ્યા નોંધાવો' : 'Report an Issue with this Template'}</span>
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => setShowReportForm(false)}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {reportSuccess ? (
+                <Alert variant="success">
+                  {language === 'gu'
+                    ? 'તમારી સમસ્યા સફળતાપૂર્વક નોંધાઈ છે. એડમિન સમીક્ષા કરશે.'
+                    : 'Issue report submitted successfully. Reviewers have been notified.'}
+                </Alert>
+              ) : (
+                <form onSubmit={handleReportSubmit} className="space-y-3">
+                  {reportError && (
+                    <Alert variant="destructive">
+                      {reportError}
+                    </Alert>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-foreground block mb-1">
+                        {language === 'gu' ? 'સમસ્યાનો પ્રકાર' : 'Issue Category'}
+                      </label>
+                      <Select
+                        value={issueType}
+                        onChange={(e) => setIssueType(e.target.value as any)}
+                        options={[
+                          { value: 'outdated_format', label: language === 'gu' ? 'જૂનું ફોર્મેટ / નિયમ બદલાયો છે' : 'Outdated Format / Rule Changed' },
+                          { value: 'incorrect_wording', label: language === 'gu' ? 'ખોટી કાનૂની ભાષા' : 'Incorrect Legal Wording' },
+                          { value: 'broken_placeholder', label: language === 'gu' ? 'પ્લેસહોલ્ડર ખામી' : 'Broken Placeholder' },
+                          { value: 'other', label: language === 'gu' ? 'અન્ય બાબત' : 'Other' },
+                        ]}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-foreground block mb-1">
+                        {language === 'gu' ? 'ઈમેલ (વૈકલ્પિક)' : 'Contact Email (Optional)'}
+                      </label>
+                      <Input
+                        type="email"
+                        placeholder="citizen@example.com"
+                        value={contactEmail}
+                        onChange={(e) => setContactEmail(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-foreground block mb-1">
+                      {language === 'gu' ? 'નવા પરિપત્ર / સત્તાવાર સ્રોતની લિંક (જો હોય તો)' : 'New Circular / Source URL (Optional)'}
+                    </label>
+                    <Input
+                      type="url"
+                      placeholder="https://revenue.gujarat.gov.in/circulars/..."
+                      value={sourceProofUrl}
+                      onChange={(e) => setSourceProofUrl(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-foreground block mb-1">
+                      {language === 'gu' ? 'વિગતવાર વર્ણન *' : 'Description of Issue *'}
+                    </label>
+                    <Textarea
+                      required
+                      rows={3}
+                      placeholder={
+                        language === 'gu'
+                          ? 'કયા ફકરા કે શબ્દો બદલાયા છે અથવા શું ખામી છે તે જણાવો...'
+                          : 'Describe what needs correction or cite the recent government order...'
+                      }
+                      value={reportDescription}
+                      onChange={(e) => setReportDescription(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowReportForm(false)}
+                    >
+                      {language === 'gu' ? 'રદ કરો' : 'Cancel'}
+                    </Button>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={isSubmittingReport || !reportDescription.trim()}
+                      className="gap-2"
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                      <span>{isSubmittingReport ? (language === 'gu' ? 'મોકલી રહ્યું છે...' : 'Submitting...') : (language === 'gu' ? 'રિપોર્ટ મોકલો' : 'Submit Report')}</span>
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
   );
 }
+

@@ -182,19 +182,19 @@ export function SubmitDocumentPage() {
         <div className="flex items-center gap-2 mb-2">
           <Badge variant="default" className="gap-1 text-xs">
             <Sparkles className="h-3 w-3" />
-            <span>AI Document Ingestion</span>
+            <span>Document Ingestion Portal</span>
           </Badge>
           <span className="text-xs text-muted-foreground font-mono">Collector Office, Gandhinagar</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-black text-primary tracking-tight">
           {language === 'gu'
-            ? 'નવું દસ્તાવેજ ફોર્મેટ સબમિટ કરો (AI સ્કેન)'
-            : 'Submit New Document Format (AI Scanner)'}
+            ? 'નવું દસ્તાવેજ ફોર્મેટ સબમિટ કરો'
+            : 'Submit New Document Format for Verification'}
         </h1>
         <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
           {language === 'gu'
-            ? 'જો તમારી જરૂરિયાત મુજબનું સોગંદનામું કે એકરારનામું હાલ લાઇબ્રેરીમાં ઉપલબ્ધ ન હોય, તો અહીં ફોર્મેટ પેસ્ટ કરો. AI આપમેળે ઇનપુટ ફીલ્ડ્સ સ્કેન કરશે અને એડમિન મંજૂરી બાદ તે સમગ્ર નાગરિકો માટે લાઇવ થશે.'
-            : 'Submit an affidavit or declaration format not yet in the library. AI automatically extracts input variables, bilingual labels, and prepares it for administrative approval to publish publicly.'}
+            ? 'જો તમારી જરૂરિયાત મુજબનું સોગંદનામું કે એકરારનામું હાલ લાઇબ્રેરીમાં ઉપલબ્ધ ન હોય, તો અહીં ફોર્મેટ પેસ્ટ કરો. ઓટોમેટેડ સિસ્ટમ જરૂરી ઇનપુટ ફીલ્ડ્સ તૈયાર કરશે અને પ્રશાસનિક મંજૂરી બાદ તે સમગ્ર નાગરિકો માટે લાઇવ થશે.'
+            : 'Submit an affidavit or declaration format not yet in the library. Automated verification extracts input variables, bilingual labels, and prepares it for administrative approval to publish publicly.'}
         </p>
       </div>
 
@@ -210,10 +210,10 @@ export function SubmitDocumentPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold text-foreground">
-                  {language === 'gu' ? 'AI સ્કેન સફળ! સબમિશન પૂર્ણ થયું' : 'AI Scan Complete & Submitted!'}
+                  {language === 'gu' ? 'ચકાસણી સફળ! સબમિશન પૂર્ણ થયું' : 'Verification Complete & Submitted!'}
                 </h2>
                 <Badge variant="success" className="text-xs">
-                  {scanResult.confidenceScore}% Confidence
+                  {scanResult.confidenceScore}% Compliance Score
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -226,7 +226,7 @@ export function SubmitDocumentPage() {
           <div className="bg-background rounded-lg p-5 border border-border space-y-4">
             <h3 className="text-sm font-bold text-primary flex items-center gap-2">
               <Layers className="h-4 w-4" />
-              <span>{language === 'gu' ? 'AI દ્વારા ઓળખાયેલ વિગતો' : 'AI Extracted Structure'}</span>
+              <span>{language === 'gu' ? 'ઓળખાયેલ દસ્તાવેજ માળખું' : 'Extracted Structure & Fields'}</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
@@ -389,7 +389,7 @@ export function SubmitDocumentPage() {
                   value={documentText}
                   onChange={(e) => setDocumentText(e.target.value)}
                   placeholder="Paste legal document draft here with blanks (e.g. હું નીચે સહી કરનાર ________ ઉંમર: ______ રહેવાસી: _________ ...)"
-                  helpText="AI detects blanks, personal details, dates, and signature lines automatically."
+                  helpText="Automatically detects blanks, personal variables, dates, and signature lines."
                 />
               </div>
 
@@ -421,12 +421,12 @@ export function SubmitDocumentPage() {
                   {isScanning ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>{scanStep || 'AI Scanning Document...'}</span>
+                      <span>{scanStep || 'Verifying Document Structure...'}</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4" />
-                      <span>Scan & Submit with AI</span>
+                      <span>Scan & Submit for Approval</span>
                     </>
                   )}
                 </Button>

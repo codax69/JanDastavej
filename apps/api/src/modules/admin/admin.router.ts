@@ -7,12 +7,15 @@ import {
   LoginRequestSchema,
   TemplateVersionSchema,
   ApproveSubmissionRequestSchema,
+  RequestCorrectionRequestSchema,
 } from '@jandastavej/shared';
 import { UserModel } from '../../models/User.js';
 import { TemplateModel, ITemplate } from '../../models/Template.js';
 import { TemplateVersionModel, ITemplateVersion } from '../../models/TemplateVersion.js';
 import { AuditEventModel } from '../../models/AuditEvent.js';
 import { DocumentSubmissionModel } from '../../models/DocumentSubmission.js';
+import { IssueReportModel } from '../../models/IssueReport.js';
+import { ServiceModel } from '../../models/Service.js';
 import { aiScannerService } from '../../services/aiScanner.js';
 import { requireAuth, requireRole, AuthenticatedRequest } from './auth.middleware.js';
 
@@ -965,6 +968,370 @@ adminRouter.post(
       });
 
       res.json({ data: submission });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /api/v1/admin/submissions/:id/request-correction - Reviewer requests changes from citizen
+adminRouter.post(
+  '/submissions/:id/request-correction',
+  requireAuth,
+  requireRole(['admin', 'template_admin', 'approver']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const parseResult = RequestCorrectionRequestSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        throw new JanDastavejError(
+          'VALIDATION_ERROR',
+          parseResult.error.errors[0]?.message || 'Please provide clear correction instructions.',
+          400
+        );
+      }
+
+      const submission = await DocumentSubmissionModel.findById(id);
+      if (!submission) {
+        throw new JanDastavejError('NOT_FOUND', 'Submission not found.', 404);
+      }
+
+      const { notes } = parseResult.data;
+      submission.status = 'needs_correction';
+      submission.correctionNotes = notes.trim();
+      submission.reviewedBy = req.user!._id as any;
+      submission.reviewedAt = new Date();
+      submission.statusHistory.push({
+        status: 'needs_correction',
+        timestamp: new Date(),
+        changedBy: req.user!._id as any,
+        note: `Correction requested: ${notes.trim()}`,
+      });
+
+      await submission.save();
+
+      await AuditEventModel.create({
+        actorUserId: req.user!._id,
+        actorEmail: req.user!.email,
+        action: 'SUBMISSION_CORRECTION_REQUESTED',
+        entityType: 'submission',
+        entityId: String(submission._id),
+        reason: notes.trim(),
+        timestamp: new Date(),
+      });
+
+      res.json({
+        data: submission,
+        message: 'Correction request recorded and dispatched to submitter.',
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /api/v1/admin/templates/:id/archive - Archive template (remove from public discovery)
+adminRouter.post(
+  '/templates/:id/archive',
+  requireAuth,
+  requireRole(['admin', 'template_admin']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const template = await TemplateModel.findById(id);
+      if (!template) {
+        throw new JanDastavejError('NOT_FOUND', 'Template not found.', 404);
+      }
+
+      template.status = 'archived';
+      await template.save();
+
+      await AuditEventModel.create({
+        actorUserId: req.user!._id,
+        actorEmail: req.user!.email,
+        action: 'TEMPLATE_ARCHIVED',
+        entityType: 'template',
+        entityId: String(template._id),
+        timestamp: new Date(),
+        metadata: { slug: template.slug },
+      });
+
+      res.json({ data: template, message: 'Template archived successfully.' });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /api/v1/admin/templates/:id/supersede - Mark template superseded by newer version
+adminRouter.post(
+  '/templates/:id/supersede',
+  requireAuth,
+  requireRole(['admin', 'template_admin']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const { supersededBySlug, reason } = req.body;
+
+      if (!supersededBySlug || typeof supersededBySlug !== 'string') {
+        throw new JanDastavejError('VALIDATION_ERROR', 'supersededBySlug is required.', 400);
+      }
+
+      const template = await TemplateModel.findById(id);
+      if (!template) {
+        throw new JanDastavejError('NOT_FOUND', 'Template not found.', 404);
+      }
+
+      template.status = 'superseded';
+      template.supersededBySlug = supersededBySlug.trim();
+      await template.save();
+
+      await AuditEventModel.create({
+        actorUserId: req.user!._id,
+        actorEmail: req.user!.email,
+        action: 'TEMPLATE_SUPERSEDED',
+        entityType: 'template',
+        entityId: String(template._id),
+        reason: reason || `Superseded by ${supersededBySlug}`,
+        timestamp: new Date(),
+        metadata: { slug: template.slug, supersededBySlug },
+      });
+
+      res.json({ data: template, message: `Template marked as superseded by ${supersededBySlug}.` });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// GET /api/v1/admin/reports - View public issue reports on templates
+adminRouter.get(
+  '/reports',
+  requireAuth,
+  requireRole(['admin', 'template_admin', 'approver', 'staff']),
+  async (_req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const reports = await IssueReportModel.find().sort({ createdAt: -1 }).lean();
+      res.json({ data: reports, total: reports.length });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// PATCH /api/v1/admin/reports/:id - Resolve or update issue report status
+adminRouter.patch(
+  '/reports/:id',
+  requireAuth,
+  requireRole(['admin', 'template_admin', 'approver']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const { status, adminNotes, markDisputed } = req.body;
+
+      const report = await IssueReportModel.findById(id);
+      if (!report) {
+        throw new JanDastavejError('NOT_FOUND', 'Issue report not found.', 404);
+      }
+
+      if (status) report.status = status;
+      if (adminNotes) report.adminNotes = adminNotes;
+      if (status === 'resolved' || status === 'dismissed') {
+        report.resolvedBy = req.user!._id as any;
+        report.resolvedAt = new Date();
+      }
+      await report.save();
+
+      if (markDisputed !== undefined) {
+        await TemplateModel.updateOne({ slug: report.templateSlug }, { isDisputed: !!markDisputed });
+      }
+
+      res.json({ data: report });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// GET /api/v1/admin/services - List all services for admin management
+adminRouter.get(
+  '/services',
+  requireAuth,
+  requireRole(['admin', 'template_admin', 'approver', 'staff']),
+  async (_req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const services = await ServiceModel.find().sort({ updatedAt: -1 }).lean();
+      res.json({ data: services, total: services.length });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// GET /api/v1/admin/services/:id - Get single service
+adminRouter.get(
+  '/services/:id',
+  requireAuth,
+  requireRole(['admin', 'template_admin', 'approver', 'staff']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const service = await ServiceModel.findById(req.params.id).lean();
+      if (!service) {
+        throw new JanDastavejError('NOT_FOUND', 'Service not found.', 404);
+      }
+      res.json({ data: service });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /api/v1/admin/services - Create new service
+adminRouter.post(
+  '/services',
+  requireAuth,
+  requireRole(['admin', 'template_admin']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const {
+        title,
+        titleGu,
+        slug,
+        department,
+        departmentGu,
+        category = 'revenue',
+        jurisdiction = 'Gujarat',
+        effectiveDate = '2026-01-01',
+        sourceReference = 'Official Department Circular',
+        description,
+        descriptionGu,
+        purpose,
+        purposeGu,
+        requiredTemplates = [],
+        steps = [],
+        stepsGu = [],
+        status = 'active',
+      } = req.body;
+
+      if (!title || !titleGu) {
+        throw new JanDastavejError('VALIDATION_ERROR', 'Service title (English & Gujarati) is required.', 400);
+      }
+
+      const generatedSlug = (slug || title)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+
+      const existing = await ServiceModel.findOne({ slug: generatedSlug });
+      if (existing) {
+        throw new JanDastavejError('VALIDATION_ERROR', `Service with slug '${generatedSlug}' already exists.`, 409);
+      }
+
+      const newService = await ServiceModel.create({
+        title,
+        titleGu,
+        slug: generatedSlug,
+        department: department || 'General Administration',
+        departmentGu: departmentGu || 'સામાન્ય વહીવટ વિભાગ',
+        category,
+        jurisdiction,
+        effectiveDate,
+        verificationStatus: 'verified_sample',
+        sourceReference,
+        description: description || title,
+        descriptionGu: descriptionGu || titleGu,
+        purpose,
+        purposeGu,
+        requiredTemplates,
+        steps: steps.length > 0 ? steps : ['Complete citizen details', 'Review generated bundle', 'Submit to Jan Seva Kendra'],
+        stepsGu: stepsGu.length > 0 ? stepsGu : ['નાગરિક વિગતો ભરો', 'દસ્તાવેજ પ્રીવ્યૂ ચકાસો', 'જન સેવા કેન્દ્રમાં જમા કરાવો'],
+        status,
+        isDemoOnly: true,
+        createdBy: req.user!._id as any,
+      });
+
+      res.status(201).json({ data: newService });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// PUT /api/v1/admin/services/:id - Update existing service
+adminRouter.put(
+  '/services/:id',
+  requireAuth,
+  requireRole(['admin', 'template_admin']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const service = await ServiceModel.findById(id);
+      if (!service) {
+        throw new JanDastavejError('NOT_FOUND', 'Service not found.', 404);
+      }
+
+      const {
+        title,
+        titleGu,
+        department,
+        departmentGu,
+        category,
+        jurisdiction,
+        effectiveDate,
+        sourceReference,
+        description,
+        descriptionGu,
+        purpose,
+        purposeGu,
+        requiredTemplates,
+        steps,
+        stepsGu,
+        status,
+      } = req.body;
+
+      if (title !== undefined) service.title = title;
+      if (titleGu !== undefined) service.titleGu = titleGu;
+      if (department !== undefined) service.department = department;
+      if (departmentGu !== undefined) service.departmentGu = departmentGu;
+      if (category !== undefined) service.category = category;
+      if (jurisdiction !== undefined) service.jurisdiction = jurisdiction;
+      if (effectiveDate !== undefined) service.effectiveDate = effectiveDate;
+      if (sourceReference !== undefined) service.sourceReference = sourceReference;
+      if (description !== undefined) service.description = description;
+      if (descriptionGu !== undefined) service.descriptionGu = descriptionGu;
+      if (purpose !== undefined) service.purpose = purpose;
+      if (purposeGu !== undefined) service.purposeGu = purposeGu;
+      if (requiredTemplates !== undefined) service.requiredTemplates = requiredTemplates;
+      if (steps !== undefined) service.steps = steps;
+      if (stepsGu !== undefined) service.stepsGu = stepsGu;
+      if (status !== undefined) service.status = status;
+
+      await service.save();
+
+      res.json({ data: service });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// DELETE /api/v1/admin/services/:id - Soft-retire service
+adminRouter.delete(
+  '/services/:id',
+  requireAuth,
+  requireRole(['admin']),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const service = await ServiceModel.findById(id);
+      if (!service) {
+        throw new JanDastavejError('NOT_FOUND', 'Service not found.', 404);
+      }
+
+      service.status = 'retired';
+      await service.save();
+
+      res.json({ message: 'Service successfully retired.' });
     } catch (err) {
       next(err);
     }

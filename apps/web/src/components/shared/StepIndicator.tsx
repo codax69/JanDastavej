@@ -1,10 +1,10 @@
-import React from 'react';
+import { SupportedLanguage } from '@jandastavej/shared';
 import { Check } from 'lucide-react';
 import { cn } from '../../lib/utils.js';
 
 export interface StepIndicatorProps {
   currentStep: 1 | 2 | 3 | 4;
-  language?: 'gu' | 'en';
+  language?: SupportedLanguage;
 }
 
 export function StepIndicator({ currentStep, language = 'gu' }: StepIndicatorProps) {

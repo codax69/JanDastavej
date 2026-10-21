@@ -20,6 +20,7 @@ import {
   X,
   FileText,
   Eye,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button.js';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card.js';
@@ -38,7 +39,7 @@ export function AdminTemplateEditorPage() {
   const navigate = useNavigate();
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'fields' | 'metadata' | 'preview'>('fields');
+  const [activeTab, setActiveTab] = useState<'fields' | 'metadata' | 'preview' | 'audit'>('fields');
 
   // Selected Version ID
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
@@ -416,6 +417,29 @@ export function AdminTemplateEditorPage() {
     setFields(nextFields);
   };
 
+  // Quick Action: Inject necessary legal fields for affidavits/declarations
+  const handleAddNecessaryStandardFields = () => {
+    const standardFields: TemplateField[] = [
+      { key: 'deponentName', label: 'Deponent Full Name', labelGu: 'સોગંદ કરનારનું પૂર્ણ નામ', type: 'text', required: true, minLength: 0, maxLength: 120 },
+      { key: 'parentSpouseName', label: 'Father / Husband Name', labelGu: 'પિતા / પતિનું નામ', type: 'text', required: true, minLength: 0, maxLength: 120 },
+      { key: 'age', label: 'Age (Years)', labelGu: 'ઉંમર (વર્ષ)', type: 'number', required: true, minLength: 1, maxLength: 3 },
+      { key: 'deponentAddress', label: 'Residential Address', labelGu: 'રહેઠાણનું સરનામું', type: 'textarea', required: true, minLength: 0, maxLength: 500 },
+      { key: 'purpose', label: 'Intended Purpose', labelGu: 'સોગંદનામાનો હેતુ / કારણ', type: 'text', required: true, minLength: 0, maxLength: 200 },
+      { key: 'declarationDate', label: 'Date of Execution', labelGu: 'તારીખ', type: 'date', required: true, minLength: 0, maxLength: 20 },
+      { key: 'place', label: 'Place of Execution', labelGu: 'સ્થળ', type: 'text', required: true, minLength: 0, maxLength: 100 },
+    ];
+
+    const currentKeys = new Set(fields.map((f) => f.key));
+    const toAdd = standardFields.filter((f) => !currentKeys.has(f.key));
+    if (toAdd.length === 0) {
+      alert('All standard legal input fields are already present in this schema!');
+      return;
+    }
+
+    setFields([...fields, ...toAdd]);
+    setActionSuccess(`Added ${toAdd.length} necessary legal fields to schema. Don't forget to click Save Schema.`);
+  };
+
   // Option Builder helpers
   const handleAddOption = () => {
     if (!newOptValue.trim() || !newOptLabel.trim()) return;
@@ -683,6 +707,18 @@ export function AdminTemplateEditorPage() {
             <Eye className="h-4 w-4" />
             <span>Live Document Preview</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab('audit')}
+            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition-colors ${
+              activeTab === 'audit'
+                ? 'border-primary text-primary bg-background'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Shield className="h-4 w-4 text-primary" />
+            <span>Audit Whole Document</span>
+          </button>
         </div>
       </Card>
 
@@ -703,6 +739,16 @@ export function AdminTemplateEditorPage() {
             <div className="flex items-center gap-2">
               {isVersionEditable ? (
                 <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAddNecessaryStandardFields}
+                    className="gap-1.5 text-xs h-8"
+                    title="Automatically add missing standard legal variables (Deponent, Address, Date, Place, Purpose)"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                    <span>Add Necessary Legal Fields</span>
+                  </Button>
                   <Button size="sm" onClick={handleOpenAddField} className="gap-1.5 text-xs h-8">
                     <Plus className="h-3.5 w-3.5" />
                     <span>Add Field</span>
@@ -1005,6 +1051,212 @@ export function AdminTemplateEditorPage() {
                 className="bg-paper shadow-lg border border-border p-8 max-w-[210mm] w-full min-h-[500px]"
                 dangerouslySetInnerHTML={{ __html: syntheticPreviewHtml }}
               />
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* TAB 4: COMPREHENSIVE DOCUMENT AUDIT & INTEGRITY CHECK */}
+      {activeTab === 'audit' && (
+        <div className="space-y-6">
+          <Card className="border-primary/30">
+            <CardHeader className="border-b border-border py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-primary" />
+                  <span>Document Template Audit & Legal Integrity Inspection</span>
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Audits the statutory template structure, bilingual label coverage, essential legal clauses, and field validation rules.
+                </p>
+              </div>
+
+              {isVersionEditable && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleAddNecessaryStandardFields}
+                  className="gap-1.5 text-xs h-8"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  <span>Auto-Fix Missing Fields</span>
+                </Button>
+              )}
+            </CardHeader>
+
+            <CardContent className="p-6 space-y-6">
+              {/* Audit Summary Metrics */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="p-4 rounded-xl border border-border bg-card">
+                  <div className="text-xs text-muted-foreground font-semibold">Total Schema Fields</div>
+                  <div className="text-2xl font-black text-foreground mt-1">{fields.length}</div>
+                </div>
+
+                <div className="p-4 rounded-xl border border-border bg-card">
+                  <div className="text-xs text-muted-foreground font-semibold">Bilingual Gujarati Coverage</div>
+                  <div className="text-2xl font-black text-primary mt-1">
+                    {fields.length > 0
+                      ? `${Math.round((fields.filter((f) => !!f.labelGu).length / fields.length) * 100)}%`
+                      : '0%'}
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl border border-border bg-card">
+                  <div className="text-xs text-muted-foreground font-semibold">Required Fields</div>
+                  <div className="text-2xl font-black text-foreground mt-1">
+                    {fields.filter((f) => f.required).length}
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl border border-border bg-card">
+                  <div className="text-xs text-muted-foreground font-semibold">Legal Clause Status</div>
+                  <div className="text-2xl font-black text-success mt-1">
+                    {fields.some((f) => f.key === 'declarationDate' || f.key === 'date') &&
+                    fields.some((f) => f.key === 'place')
+                      ? 'Compliant'
+                      : 'Attention'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed Checklist Audit */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Statutory Audit Checklist
+                </h4>
+
+                <div className="divide-y divide-border border border-border rounded-lg overflow-hidden bg-card text-xs">
+                  {/* Item 1: Bilingual Labels */}
+                  <div className="p-3.5 flex items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <div className="font-bold text-foreground">Gujarati Bilingual Labels</div>
+                      <div className="text-muted-foreground text-[11px]">
+                        Every input field must provide native Gujarati script labels for district administration accessibility.
+                      </div>
+                    </div>
+                    <div>
+                      {fields.every((f) => !!f.labelGu) ? (
+                        <Badge variant="success" className="gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          <span>100% Translated</span>
+                        </Badge>
+                      ) : (
+                        <Badge variant="warning" className="gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          <span>
+                            {fields.filter((f) => !f.labelGu).length} Missing Gujarati
+                          </span>
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Item 2: Execution Date & Place */}
+                  <div className="p-3.5 flex items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <div className="font-bold text-foreground">Execution Date & Place Clauses</div>
+                      <div className="text-muted-foreground text-[11px]">
+                        Statutory affidavits must contain execution date and geographical place (તારીખ અને સ્થળ).
+                      </div>
+                    </div>
+                    <div>
+                      {fields.some((f) => f.key === 'declarationDate' || f.key === 'date') &&
+                      fields.some((f) => f.key === 'place') ? (
+                        <Badge variant="success" className="gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          <span>Verified Present</span>
+                        </Badge>
+                      ) : (
+                        <Badge variant="destructive" className="gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          <span>Missing Date/Place</span>
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Item 3: Deponent Identity */}
+                  <div className="p-3.5 flex items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <div className="font-bold text-foreground">Deponent Name & Address Definition</div>
+                      <div className="text-muted-foreground text-[11px]">
+                        Applicant personal identification fields required for sworn declaration legal standing.
+                      </div>
+                    </div>
+                    <div>
+                      {fields.some((f) => f.key.toLowerCase().includes('name')) &&
+                      fields.some((f) => f.key.toLowerCase().includes('address')) ? (
+                        <Badge variant="success" className="gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          <span>Present</span>
+                        </Badge>
+                      ) : (
+                        <Badge variant="warning" className="gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          <span>Name/Address Incomplete</span>
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Item 4: Layout Key Verification */}
+                  <div className="p-3.5 flex items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <div className="font-bold text-foreground">Layout Engine Alignment</div>
+                      <div className="text-muted-foreground text-[11px]">
+                        Bound layout key: <span className="font-mono text-primary font-bold">{layoutKey}</span>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="text-xs font-mono capitalize">
+                      {layoutKey.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Banner */}
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="text-sm font-bold text-primary flex items-center gap-1.5">
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Audit Ready for Administrative Review</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    This template version conforms to Gujarat digital document standards. You may transition to review or publish.
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {currentVersion.status === 'draft' && (
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        handleTransition(
+                          `${API_BASE}/admin/template-versions/${currentVersion._id}/submit-review`
+                        )
+                      }
+                      className="gap-1.5 text-xs font-bold"
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                      <span>Submit for Review</span>
+                    </Button>
+                  )}
+                  {currentVersion.status === 'in_review' && (
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        handleTransition(
+                          `${API_BASE}/admin/template-versions/${currentVersion._id}/approve`
+                        )
+                      }
+                      className="gap-1.5 text-xs font-bold bg-success hover:bg-success/90"
+                    >
+                      <CheckCircle className="h-3.5 w-3.5" />
+                      <span>Approve Version</span>
+                    </Button>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

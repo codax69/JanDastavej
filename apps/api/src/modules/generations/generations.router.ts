@@ -4,15 +4,19 @@ import {
   JanDastavejError,
   validateAndSanitizeAnswers,
   renderDocumentHtml,
+  normalizeAnswersForTemplate,
   ValidateAnswersRequestSchema,
   CreatePreviewRequestSchema,
   CreatePdfRequestSchema,
+  CreateServiceBundleRequestSchema,
 } from '@jandastavej/shared';
 import { TemplateModel, ITemplate } from '../../models/Template.js';
 import { TemplateVersionModel, ITemplateVersion } from '../../models/TemplateVersion.js';
 import { GenerationSessionModel, IGenerationSession } from '../../models/GenerationSession.js';
+import { ServiceModel } from '../../models/Service.js';
 import { UsageMetricModel } from '../../models/UsageMetric.js';
 import { generateDocumentPdf } from '../pdf/pdf.service.js';
+import { generateDocumentDocx } from './docx.service.js';
 
 export const generationsRouter = Router();
 
@@ -127,6 +131,7 @@ generationsRouter.post('/preview', async (req: Request, res: Response, next: Nex
     const session = await GenerationSessionModel.create({
       templateVersionId: version._id,
       templateSlug: template?.slug || 'unknown',
+      layoutKey: version.layoutKey,
       answers: validation.sanitizedAnswers,
       language,
       previewHtml,
@@ -425,4 +430,181 @@ generationsRouter.post('/:sessionId/bundle', async (req: Request, res: Response,
     next(err);
   }
 });
+
+// GET /api/v1/generations/:sessionId/docx - Download DOCX Word document
+generationsRouter.get('/:sessionId/docx', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { sessionId } = req.params;
+    if (!Types.ObjectId.isValid(sessionId)) {
+      throw new JanDastavejError('VALIDATION_ERROR', 'Invalid session ID', 400);
+    }
+
+    const session = (await GenerationSessionModel.findById(sessionId).lean()) as (IGenerationSession & { _id: Types.ObjectId }) | null;
+    if (!session || new Date() > new Date(session.expiresAt)) {
+      throw new JanDastavejError(
+        'SESSION_EXPIRED',
+        'Your generation session has expired. Please create a new preview.',
+        410
+      );
+    }
+
+    let layoutKey: string = session.layoutKey || 'sample_declaration';
+    if (!session.layoutKey) {
+      const version = (await TemplateVersionModel.findById(session.templateVersionId).lean()) as (ITemplateVersion & { _id: Types.ObjectId }) | null;
+      if (version?.layoutKey) layoutKey = version.layoutKey;
+    }
+
+    const docxBuffer = await generateDocumentDocx({
+      layoutKey,
+      language: session.language,
+      answers: session.answers,
+      isDemoOnly: true,
+      title: `JanDastavej - ${session.templateSlug}`,
+    });
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="JanDastavej-${session.templateSlug}-${session.language}.docx"`
+    );
+    res.send(docxBuffer);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/generations/service-bundle - Generate multiple documents for a service with shared answers
+generationsRouter.post('/service-bundle', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const parseResult = CreateServiceBundleRequestSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      throw new JanDastavejError(
+        'VALIDATION_ERROR',
+        parseResult.error.issues[0]?.message || 'Invalid service bundle payload.',
+        400
+      );
+    }
+
+    const { serviceSlug, language, answers, selectedTemplateSlugs } = parseResult.data;
+
+    const service = await ServiceModel.findOne({ slug: serviceSlug, status: 'active' }).lean();
+    if (!service) {
+      throw new JanDastavejError('NOT_FOUND', `Service '${serviceSlug}' not found.`, 404);
+    }
+
+    // Find templates and their published versions
+    const templates = await TemplateModel.find({
+      slug: { $in: selectedTemplateSlugs },
+      status: 'active',
+    }).lean();
+
+    if (templates.length === 0) {
+      throw new JanDastavejError('NOT_FOUND', 'No active templates found for selected slugs.', 404);
+    }
+
+    const templateIds = templates.map((t) => t._id);
+    const versions = await TemplateVersionModel.find({
+      templateId: { $in: templateIds },
+      language,
+      status: 'published',
+    }).lean();
+
+    const versionMap = new Map(versions.map((v) => [String(v.templateId), v]));
+
+    const sessions = [];
+    const htmlSections: string[] = [];
+
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 mins TTL
+
+    for (const tpl of templates) {
+      const version = versionMap.get(String(tpl._id));
+      if (!version) continue;
+
+      const fieldKeys = (version.fields as any[]).map((f: any) => f.key);
+      const normalizedAnswers = normalizeAnswersForTemplate(answers, fieldKeys);
+
+      const previewHtml = renderDocumentHtml({
+        layoutKey: version.layoutKey,
+        language,
+        answers: normalizedAnswers,
+        isDemoOnly: true,
+      });
+
+      const sessionDoc = await GenerationSessionModel.create({
+        templateId: tpl._id,
+        templateSlug: tpl.slug,
+        templateVersionId: version._id,
+        layoutKey: version.layoutKey,
+        language,
+        answers: normalizedAnswers,
+        previewHtml,
+        expiresAt,
+      });
+
+      sessions.push({
+        templateSlug: tpl.slug,
+        templateTitle: language === 'gu' ? tpl.titleGu : tpl.title,
+        templateCategory: tpl.category,
+        sessionId: String(sessionDoc._id),
+        previewHtml,
+        answers: normalizedAnswers,
+      });
+
+      htmlSections.push(previewHtml);
+    }
+
+    const combinedHtml = htmlSections.join(
+      '<div style="page-break-before: always; height: 1px; margin: 0; padding: 0;"></div>'
+    );
+
+    res.json({
+      data: {
+        serviceSlug,
+        serviceTitle: language === 'gu' ? service.titleGu : service.title,
+        sessions,
+        combinedHtml,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/generations/service-bundle/pdf - Combined PDF download for all documents in a service bundle
+generationsRouter.post('/service-bundle/pdf', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { sessionIds, title = 'JanDastavej-Service-Bundle' } = req.body;
+    if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
+      throw new JanDastavejError('VALIDATION_ERROR', 'sessionIds array is required.', 400);
+    }
+
+    const validIds = sessionIds.filter((id) => Types.ObjectId.isValid(id));
+    const sessions = (await GenerationSessionModel.find({
+      _id: { $in: validIds },
+    }).lean()) as unknown as (IGenerationSession & { _id: Types.ObjectId })[];
+
+    if (sessions.length === 0) {
+      throw new JanDastavejError('NOT_FOUND', 'No valid generation sessions found.', 404);
+    }
+
+    const combinedHtml = sessions
+      .map((s) => s.previewHtml)
+      .join('<div style="page-break-before: always; height: 1px; margin: 0; padding: 0;"></div>');
+
+    const pdfBuffer = await generateDocumentPdf(combinedHtml, title);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${title}.pdf"`
+    );
+    res.send(pdfBuffer);
+  } catch (err) {
+    next(err);
+  }
+});
+
 

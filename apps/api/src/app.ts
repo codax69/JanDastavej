@@ -8,6 +8,7 @@ import { logger } from './config/logger.js';
 import { requestIdMiddleware } from './middleware/requestId.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { templatesRouter } from './modules/templates/templates.router.js';
+import { servicesRouter } from './modules/services/services.router.js';
 import { generationsRouter } from './modules/generations/generations.router.js';
 import { adminRouter } from './modules/admin/admin.router.js';
 import { submissionsRouter } from './modules/submissions/submissions.router.js';
@@ -71,6 +72,7 @@ app.get(['/admin', '/admin/*'], (_req: Request, res: Response) => {
 
 // Public routers
 app.use('/api/v1/templates', templatesRouter);
+app.use('/api/v1/services', servicesRouter);
 app.use('/api/v1/generations', generationsRouter);
 app.use('/api/v1/submissions', submissionsRouter);
 app.use('/api/v1/auth', citizenAuthRouter);

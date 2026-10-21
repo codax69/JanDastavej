@@ -3,6 +3,8 @@ import {
   TemplateVersion,
   PreviewResponse,
   ApiErrorResponse,
+  ServiceSummary,
+  ServiceDetail,
 } from '@jandastavej/shared';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -84,6 +86,20 @@ export const api = {
     );
   },
 
+  async getServices(params?: { search?: string; category?: string; department?: string; language?: string }): Promise<{ data: ServiceSummary[]; meta: { total: number } }> {
+    const sp = new URLSearchParams();
+    if (params?.search) sp.set('search', params.search);
+    if (params?.category) sp.set('category', params.category);
+    if (params?.department) sp.set('department', params.department);
+    if (params?.language) sp.set('language', params.language);
+    const query = sp.toString() ? `?${sp.toString()}` : '';
+    return request<{ data: ServiceSummary[]; meta: { total: number } }>(`/services${query}`);
+  },
+
+  async getServiceDetail(slug: string, language = 'gu'): Promise<{ data: ServiceDetail }> {
+    return request<{ data: ServiceDetail }>(`/services/${slug}?language=${language}`);
+  },
+
   async validateAnswers(payload: { templateVersionId: string; answers: Record<string, any>; language: string }): Promise<{ isValid: boolean; errors: Record<string, string> }> {
     return request<{ isValid: boolean; errors: Record<string, string> }>(
       '/generations/validate',
@@ -126,6 +142,81 @@ export const api = {
       } catch {}
       throw new ApiClientError(
         errJson?.error?.message || 'Failed to generate PDF document.',
+        errJson?.error?.code || 'PDF_UNAVAILABLE'
+      );
+    }
+
+    return res.blob();
+  },
+
+  async downloadDocxBlob(sessionId: string): Promise<Blob> {
+    const url = `${BASE_URL}/generations/${sessionId}/docx`;
+    const res = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      let errJson: any;
+      try {
+        errJson = await res.json();
+      } catch {}
+      throw new ApiClientError(
+        errJson?.error?.message || 'Failed to download DOCX document.',
+        errJson?.error?.code || 'DOCX_UNAVAILABLE'
+      );
+    }
+
+    return res.blob();
+  },
+
+  async createServiceBundle(payload: {
+    serviceSlug: string;
+    language: string;
+    answers: Record<string, any>;
+    selectedTemplateSlugs: string[];
+  }): Promise<{
+    data: {
+      serviceSlug: string;
+      serviceTitle: string;
+      sessions: Array<{
+        templateSlug: string;
+        templateTitle: string;
+        templateCategory: string;
+        sessionId: string;
+        previewHtml: string;
+        answers: Record<string, any>;
+      }>;
+      combinedHtml: string;
+    };
+  }> {
+    return request('/generations/service-bundle', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async downloadServiceBundlePdfBlob(sessionIds: string[], title?: string): Promise<Blob> {
+    const url = `${BASE_URL}/generations/service-bundle/pdf`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sessionIds,
+        title,
+      }),
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      let errJson: any;
+      try {
+        errJson = await res.json();
+      } catch {}
+      throw new ApiClientError(
+        errJson?.error?.message || 'Failed to generate bundle PDF.',
         errJson?.error?.code || 'PDF_UNAVAILABLE'
       );
     }
@@ -243,6 +334,61 @@ export const api = {
     }
 
     return res.blob();
+  },
+
+  async reportTemplate(
+    slug: string,
+    payload: {
+      issueType: 'outdated_format' | 'incorrect_wording' | 'legal_change' | 'broken_placeholder' | 'other';
+      description: string;
+      sourceProofUrl?: string;
+      contactEmail?: string;
+    }
+  ): Promise<{ data: any }> {
+    return request<{ data: any }>(`/templates/${slug}/report`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async getAdminReports(): Promise<{ data: any[] }> {
+    return request<{ data: any[] }>('/admin/reports');
+  },
+
+  async updateAdminReport(id: string, status: string, notes?: string): Promise<{ data: any }> {
+    return request<{ data: any }>(`/admin/reports/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, notes }),
+    });
+  },
+
+  // Admin Services Management
+  async getAdminServices(): Promise<{ data: any[] }> {
+    return request<{ data: any[] }>('/admin/services');
+  },
+
+  async getAdminService(id: string): Promise<{ data: any }> {
+    return request<{ data: any }>(`/admin/services/${id}`);
+  },
+
+  async createAdminService(payload: any): Promise<{ data: any }> {
+    return request<{ data: any }>('/admin/services', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async updateAdminService(id: string, payload: any): Promise<{ data: any }> {
+    return request<{ data: any }>(`/admin/services/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async deleteAdminService(id: string): Promise<{ message: string }> {
+    return request<{ message: string }>(`/admin/services/${id}`, {
+      method: 'DELETE',
+    });
   },
 };
 

@@ -66,7 +66,7 @@ export function AdminSubmissionsPage() {
           <ArrowLeft className="h-3.5 w-3.5" />
           <span>Back to Template Registry</span>
         </Link>
-        <span className="text-xs text-muted-foreground">Admin Portal · AI Submissions</span>
+        <span className="text-xs text-muted-foreground">Admin Portal · Ingestion Queue</span>
       </div>
 
       {/* Admin Nav Header */}
@@ -75,18 +75,24 @@ export function AdminSubmissionsPage() {
           <div className="flex items-center gap-2 mb-1">
             <Badge variant="default" className="gap-1 text-xs">
               <Sparkles className="h-3.5 w-3.5" />
-              <span>AI Ingestion Queue</span>
+              <span>Moderation Pipeline</span>
             </Badge>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-primary tracking-tight">
             Citizen Document Submissions
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Review AI-extracted formats, inspect field schemas, and approve to publish directly to citizens.
+            Review automated structure extraction, inspect field schemas, and approve to publish directly to citizens.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
+          <Link to="/admin/services">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+              <Layers className="h-3.5 w-3.5 text-primary" />
+              <span>Services</span>
+            </Button>
+          </Link>
           <Link to="/admin/templates">
             <Button variant="outline" size="sm" className="gap-1.5 text-xs">
               <FileText className="h-3.5 w-3.5" />
@@ -122,9 +128,13 @@ export function AdminSubmissionsPage() {
             className="h-9 px-3 text-xs rounded-md border border-input bg-background font-medium"
           >
             <option value="all">All Statuses</option>
-            <option value="scanned">Scanned (Pending Review)</option>
+            <option value="ai_review_ready">Awaiting Review (Verification Ready)</option>
+            <option value="needs_correction">Needs Correction</option>
             <option value="approved">Approved & Published</option>
             <option value="rejected">Rejected</option>
+            <option value="withdrawn">Withdrawn</option>
+            <option value="extraction_failed">Extraction Failed</option>
+            <option value="scan_failed">Scan Failed</option>
           </select>
         </div>
 
@@ -162,7 +172,7 @@ export function AdminSubmissionsPage() {
                   <tr>
                     <th className="px-5 py-3.5">Document Title</th>
                     <th className="px-5 py-3.5">Category</th>
-                    <th className="px-5 py-3.5">AI Scan & Confidence</th>
+                    <th className="px-5 py-3.5">Verification Score</th>
                     <th className="px-5 py-3.5">Submitter</th>
                     <th className="px-5 py-3.5">Status</th>
                     <th className="px-5 py-3.5 text-right">Action</th>
@@ -204,12 +214,34 @@ export function AdminSubmissionsPage() {
                           {sub.submitterEmail && <div className="text-[11px] opacity-75">{sub.submitterEmail}</div>}
                         </td>
                         <td className="px-5 py-3.5">
-                          <Badge
-                            variant={isApproved ? 'success' : isRejected ? 'destructive' : 'warning'}
-                            className="capitalize text-xs"
-                          >
-                            {isApproved ? 'Approved & Published' : isRejected ? 'Rejected' : 'Pending Review'}
-                          </Badge>
+                          {(() => {
+                            let variant: 'success' | 'destructive' | 'warning' | 'secondary' | 'outline' = 'secondary';
+                            let label = sub.status;
+                            if (sub.status === 'approved') {
+                              variant = 'success';
+                              label = 'Approved & Published';
+                            } else if (sub.status === 'rejected') {
+                              variant = 'destructive';
+                              label = 'Rejected';
+                            } else if (sub.status === 'needs_correction') {
+                              variant = 'warning';
+                              label = 'Needs Correction';
+                            } else if (sub.status === 'scan_failed' || sub.status === 'extraction_failed') {
+                              variant = 'destructive';
+                              label = sub.status === 'scan_failed' ? 'Scan Failed' : 'Extraction Failed';
+                            } else if (sub.status === 'withdrawn') {
+                              variant = 'outline';
+                              label = 'Withdrawn';
+                            } else {
+                              variant = 'secondary';
+                              label = 'Awaiting Review';
+                            }
+                            return (
+                              <Badge variant={variant} className="capitalize text-xs">
+                                {label}
+                              </Badge>
+                            );
+                          })()}
                         </td>
                         <td className="px-5 py-3.5 text-right">
                           <Link to={`/admin/submissions/${sub._id}`}>

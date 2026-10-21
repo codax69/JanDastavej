@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { JanDastavejError } from '@jandastavej/shared';
 import { TemplateModel, ITemplate } from '../../models/Template.js';
 import { TemplateVersionModel } from '../../models/TemplateVersion.js';
+import { IssueReportModel } from '../../models/IssueReport.js';
 
 export const templatesRouter = Router();
 
@@ -141,3 +142,41 @@ templatesRouter.get('/:id/versions/:version', async (req: Request, res: Response
     next(err);
   }
 });
+
+// POST /api/v1/templates/:slug/report - Report incorrect or outdated template (Section 7)
+templatesRouter.post('/:slug/report', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { slug } = req.params;
+    const template = await TemplateModel.findOne({ slug });
+    if (!template) {
+      throw new JanDastavejError('NOT_FOUND', `Template '${slug}' not found.`, 404);
+    }
+
+    const { issueType, description, reporterName, reporterEmail } = req.body;
+    if (!issueType || !description || typeof description !== 'string' || description.trim().length < 5) {
+      throw new JanDastavejError(
+        'VALIDATION_ERROR',
+        'Please specify the issue type and provide a description of at least 5 characters.',
+        400
+      );
+    }
+
+    const report = await IssueReportModel.create({
+      templateId: template._id,
+      templateSlug: slug,
+      issueType,
+      description: description.trim(),
+      reporterName: reporterName?.trim(),
+      reporterEmail: reporterEmail?.trim(),
+      status: 'open',
+    });
+
+    res.status(201).json({
+      data: report,
+      message: 'Issue report submitted successfully. Administrative review will inspect this format.',
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+

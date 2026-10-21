@@ -209,7 +209,7 @@ export function LibraryPage() {
         </div>
       )}
 
-      {/* Can't find your document format? Submit for AI scanning */}
+      {/* Can't find your document format? Submit for automated verification */}
       <Card className="border-dashed border-primary/40 bg-gradient-to-r from-primary/5 via-background to-primary/5 p-6 text-center space-y-3">
         <div className="inline-flex items-center justify-center p-2 rounded-full bg-primary/10 text-primary mb-1">
           <Sparkles className="h-6 w-6" />
@@ -221,14 +221,14 @@ export function LibraryPage() {
         </h3>
         <p className="text-xs text-muted-foreground max-w-lg mx-auto">
           {language === 'gu'
-            ? 'તમારી પાસે રહેલ ડ્રાફ્ટ કે લખાણ સબમિટ કરો. અમારી AI સિસ્ટમ તેને સ્કેન કરીને ઇનપુટ ફીલ્ડ્સ તૈયાર કરશે અને કલેક્ટર કચેરીની મંજૂરી બાદ તે અહીં ઉપલબ્ધ થશે.'
-            : 'Submit your custom draft text. AI scans the variables and prepares a standardized format. Once approved by the Collector Office, it is published for all citizens.'}
+            ? 'તમારી પાસે રહેલ સત્તાવાર ડ્રાફ્ટ કે લખાણ સબમિટ કરો. અમારી ઓટોમેટેડ સિસ્ટમ જરૂરી ઇનપુટ ફીલ્ડ્સ તૈયાર કરશે અને પ્રશાસનિક મંજૂરી બાદ તે અહીં ઉપલબ્ધ થશે.'
+            : 'Submit your official draft text. Our automated system analyzes required fields and prepares a standardized format. Once approved by the Collector Office, it is published for all citizens.'}
         </p>
         <div className="pt-2">
           <Link to="/submit-format">
             <Button size="sm" className="gap-2 font-bold">
               <Sparkles className="h-4 w-4" />
-              <span>{language === 'gu' ? 'નવું ફોર્મેટ સબમિટ કરો (AI સ્કેન)' : 'Submit Format for AI Scanning'}</span>
+              <span>{language === 'gu' ? 'નવું ફોર્મેટ સબમિટ કરો' : 'Submit Candidate Format'}</span>
             </Button>
           </Link>
         </div>

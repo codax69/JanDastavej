@@ -41,7 +41,30 @@ export function CitizenAuthProvider({ children }: { children: React.ReactNode })
   };
 
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchCurrentCitizen = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
+        if (!isMounted) return;
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted) setCitizen(data?.data?.user || null);
+        } else {
+          if (isMounted) setCitizen(null);
+        }
+      } catch {
+        if (isMounted) setCitizen(null);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
     fetchCurrentCitizen();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const requestOtp = async (identifier: string) => {

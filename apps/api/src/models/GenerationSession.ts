@@ -3,6 +3,7 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 export interface IGenerationSession extends Document {
   templateVersionId: Types.ObjectId;
   templateSlug: string;
+  layoutKey?: string;
   answers: Record<string, any>;
   language: 'gu' | 'en';
   previewHtml: string;
@@ -15,6 +16,7 @@ const GenerationSessionSchema = new Schema<IGenerationSession>(
   {
     templateVersionId: { type: Schema.Types.ObjectId, ref: 'TemplateVersion', required: true },
     templateSlug: { type: String, required: true },
+    layoutKey: { type: String },
     answers: { type: Schema.Types.Mixed, required: true },
     language: { type: String, enum: ['gu', 'en'], default: 'gu' },
     previewHtml: { type: String, required: true },

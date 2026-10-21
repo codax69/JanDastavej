@@ -8,10 +8,12 @@ export interface ITemplate extends Document {
   descriptionGu: string;
   category: 'affidavit' | 'declaration' | 'certificate_support' | 'revenue_service' | 'general';
   supportedLanguages: Array<'gu' | 'en'>;
-  status: 'active' | 'retired';
+  status: 'active' | 'retired' | 'archived' | 'superseded';
   currentPublishedVersionId?: Types.ObjectId;
   currentVersionNumber?: number;
   isDemoOnly: boolean;
+  isDisputed?: boolean;
+  supersededBySlug?: string;
   purpose?: string;
   purposeGu?: string;
   requiredDocuments: string[];
@@ -44,7 +46,7 @@ const TemplateSchema = new Schema<ITemplate>(
     },
     status: {
       type: String,
-      enum: ['active', 'retired'],
+      enum: ['active', 'retired', 'archived', 'superseded'],
       default: 'active',
       index: true,
       required: true,
@@ -52,6 +54,8 @@ const TemplateSchema = new Schema<ITemplate>(
     currentPublishedVersionId: { type: Schema.Types.ObjectId, ref: 'TemplateVersion' },
     currentVersionNumber: { type: Number, default: 1 },
     isDemoOnly: { type: Boolean, default: true },
+    isDisputed: { type: Boolean, default: false, index: true },
+    supersededBySlug: { type: String },
     purpose: { type: String },
     purposeGu: { type: String },
     requiredDocuments: { type: [String], default: [] },

@@ -33,6 +33,7 @@ export function PreviewPage() {
 
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingDocx, setDownloadingDocx] = useState(false);
   const [downloadingBundle, setDownloadingBundle] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [selectedAnnexureIds, setSelectedAnnexureIds] = useState<string[]>([]);
@@ -92,6 +93,28 @@ export function PreviewPage() {
       setDownloadError(err.message || 'Failed to download PDF. Please try browser print instead.');
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const handleDownloadDocx = async () => {
+    if (!disclaimerAccepted || !sessionId) return;
+    setDownloadingDocx(true);
+    setDownloadError(null);
+
+    try {
+      const blob = await api.downloadDocxBlob(sessionId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `JanDastavej-${session?.templateSlug || 'document'}-${language}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      setDownloadError(err.message || 'Failed to download Word document.');
+    } finally {
+      setDownloadingDocx(false);
     }
   };
 
@@ -302,6 +325,21 @@ export function PreviewPage() {
               </span>
             </Button>
           )}
+
+          <Button
+            variant="outline"
+            size="lg"
+            disabled={!disclaimerAccepted || downloadingDocx}
+            onClick={handleDownloadDocx}
+            className="gap-2 border-primary/40 text-primary hover:bg-primary/5"
+          >
+            <FileText className="h-4 w-4" />
+            <span>
+              {downloadingDocx
+                ? language === 'gu' ? 'Word બની રહ્યું છે...' : 'Preparing Word...'
+                : language === 'gu' ? 'Word (.docx) ડાઉનલોડ' : 'Download Word (.docx)'}
+            </span>
+          </Button>
 
           <Button
             variant="primary"

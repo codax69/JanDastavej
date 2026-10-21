@@ -100,7 +100,7 @@ export function AdminSubmissionReviewPage() {
         body: JSON.stringify({ categoryHint: category }),
       });
       if (!res.ok) throw new Error('Failed to re-scan document.');
-      setActionSuccess('Document re-scanned by AI successfully.');
+      setActionSuccess('Document re-scanned and audited successfully.');
       refetch();
     } catch (err: any) {
       setActionError(err.message);
@@ -163,6 +163,25 @@ export function AdminSubmissionReviewPage() {
       });
       if (!res.ok) throw new Error('Rejection failed.');
       setActionSuccess('Submission rejected.');
+      refetch();
+    } catch (err: any) {
+      setActionError(err.message);
+    }
+  };
+
+  const handleRequestCorrection = async () => {
+    const notes = prompt('Enter specific correction instructions for the citizen submitter:');
+    if (!notes) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/admin/submissions/${id}/request-correction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ notes }),
+      });
+      if (!res.ok) throw new Error('Failed to request correction.');
+      setActionSuccess('Correction request dispatched to submitter.');
       refetch();
     } catch (err: any) {
       setActionError(err.message);
@@ -304,11 +323,11 @@ export function AdminSubmissionReviewPage() {
             <div className="flex items-center gap-2 mb-1">
               <Badge variant="default" className="gap-1 text-xs">
                 <Sparkles className="h-3 w-3" />
-                <span>AI Scan Analysis</span>
+                <span>Automated Compliance Audit</span>
               </Badge>
               {scan && (
                 <Badge variant="outline" className="text-xs font-mono">
-                  {scan.confidenceScore}% Confidence
+                  {scan.confidenceScore}% Quality Score
                 </Badge>
               )}
               <Badge
@@ -340,6 +359,16 @@ export function AdminSubmissionReviewPage() {
                 >
                   <RefreshCw className={`h-3.5 w-3.5 ${isRescanning ? 'animate-spin' : ''}`} />
                   <span>Re-scan AI</span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleRequestCorrection}
+                  className="gap-1.5 text-xs h-8 text-warning border-warning/40 hover:bg-warning/10"
+                >
+                  <Edit2 className="h-3.5 w-3.5" />
+                  <span>Request Correction</span>
                 </Button>
 
                 <Button
@@ -393,7 +422,7 @@ export function AdminSubmissionReviewPage() {
             </div>
           </div>
 
-          {/* RIGHT: AI EXTRACTION & REFINEMENT */}
+          {/* RIGHT: AUTOMATED EXTRACTION & CONFIGURATION */}
           <div className="space-y-4">
             <span className="text-xs font-bold uppercase text-muted-foreground tracking-wider flex items-center gap-1.5">
               <Sparkles className="h-4 w-4 text-primary" />

@@ -280,6 +280,176 @@ export function renderDocumentHtml(options: DocumentRenderOptions): string {
       break;
     }
 
+    case 'undertaking_utility': {
+      if (language === 'gu') {
+        bodyContent = `
+          <div class="doc-header">
+            <div class="doc-authority">ગાંધીનગર મહાનગરપાલિકા / સરકારી ઉપયોગિતા સેવા</div>
+            <div class="doc-title">બાંહેધરીપત્ર (અંડરટેકિંગ)</div>
+            <div class="doc-subtitle">(નવા નળ / વીજળી જોડાણ અથવા સરકારી યોજના માટે બાંહેધરી)</div>
+          </div>
+
+          <div class="doc-body">
+            <p class="doc-paragraph">
+              હું નીચે સહી કરનાર અરજદાર <strong>${escapeHtml(String(answers.fullName || answers.applicantName || ''))}</strong>, 
+              પિતા/પતિનું નામ: <strong>${escapeHtml(String(answers.parentSpouseName || ''))}</strong>, 
+              સરનામું: <strong>${escapeHtml(String(answers.address || answers.currentAddress || ''))}</strong>, 
+              આથી લેખિત બાંહેધરી આપું છું કે:
+            </p>
+
+            <div class="doc-statement-box">
+              <p><strong>બાંહેધરીનો મુખ્ય વિષય / શરતો:</strong></p>
+              <p class="doc-statement-text">${escapeHtml(String(answers.undertakingPurpose || answers.declarationPurpose || 'નવા જોડાણ અથવા સેવા મેળવવા માટેની તમામ શરતોનું પાલન કરવાની બાંહેધરી.'))}</p>
+            </div>
+
+            <p class="doc-paragraph">
+              ૧. હું બાંહેધરી આપું છું કે જે મિલકત/જગ્યા માટે અરજી કરેલ છે તે અંગે કોઈ ન્યાયાલયીન વિવાદ કે સ્ટે નથી.<br/>
+              ૨. નિયત સરકારી નિયમો, ચાર્જ અને ટેક્સ હું નિયમિતપણે ભરવા બંધાયેલ છું.<br/>
+              ૩. જો કોઈ અનધિકૃત બાંધકામ કે ખોટી વિગત જણાશે તો આ જોડાણ રદ કરવા સામે મારો કોઈ હક્ક-દાવો રહેશે નહીં.
+            </p>
+          </div>
+
+          <div class="doc-footer">
+            <div class="doc-meta-left">
+              <p><strong>તારીખ:</strong> ${escapeHtml(String(answers.declarationDate || answers.date || ''))}</p>
+              <p><strong>સ્થળ:</strong> ${escapeHtml(String(answers.place || 'ગાંધીનગર'))}</p>
+            </div>
+            <div class="doc-meta-right">
+              <div class="signature-line"></div>
+              <p><strong>બાંહેધરી આપનારની સહી</strong></p>
+              <p>(${escapeHtml(String(answers.fullName || answers.applicantName || ''))})</p>
+            </div>
+          </div>
+        `;
+      } else {
+        bodyContent = `
+          <div class="doc-header">
+            <div class="doc-authority">GANDHINAGAR MUNICIPAL CORPORATION / UTILITY SERVICES</div>
+            <div class="doc-title">UNDERTAKING FORM</div>
+            <div class="doc-subtitle">(Undertaking for Utility Connection / Municipal Services)</div>
+          </div>
+
+          <div class="doc-body">
+            <p class="doc-paragraph">
+              I, the undersigned applicant <strong>${escapeHtml(String(answers.fullName || answers.applicantName || ''))}</strong>, 
+              Son / Daughter / Wife of <strong>${escapeHtml(String(answers.parentSpouseName || ''))}</strong>, 
+              residing at <strong>${escapeHtml(String(answers.address || answers.currentAddress || ''))}</strong>, 
+              do hereby undertake and declare as follows:
+            </p>
+
+            <div class="doc-statement-box">
+              <p><strong>Terms and Purpose of Undertaking:</strong></p>
+              <p class="doc-statement-text">${escapeHtml(String(answers.undertakingPurpose || answers.declarationPurpose || 'Undertaking to comply with all statutory municipal regulations and charges.'))}</p>
+            </div>
+
+            <p class="doc-paragraph">
+              1. I undertake that there is no pending court dispute, injunction, or illegal encroachment regarding the premises.<br/>
+              2. I agree to pay all statutory tariffs, dues, and assessment taxes in accordance with municipal laws.<br/>
+              3. If any detail furnished herein is found misleading or false, the authority shall be entitled to disconnect or cancel the approval without notice.
+            </p>
+          </div>
+
+          <div class="doc-footer">
+            <div class="doc-meta-left">
+              <p><strong>Date:</strong> ${escapeHtml(String(answers.declarationDate || answers.date || ''))}</p>
+              <p><strong>Place:</strong> ${escapeHtml(String(answers.place || 'Gandhinagar'))}</p>
+            </div>
+            <div class="doc-meta-right">
+              <div class="signature-line"></div>
+              <p><strong>Signature of Applicant</strong></p>
+              <p>(${escapeHtml(String(answers.fullName || answers.applicantName || ''))})</p>
+            </div>
+          </div>
+        `;
+      }
+      break;
+    }
+
+    case 'income_declaration': {
+      if (language === 'gu') {
+        bodyContent = `
+          <div class="doc-header">
+            <div class="doc-authority">કલેક્ટર કચેરી, ગાંધીનગર (મહેસૂલ વિભાગ)</div>
+            <div class="doc-title">કુટુંબની વાર્ષિક આવક અંગેનું સ્વ-ઘોષણાપત્ર</div>
+            <div class="doc-subtitle">(આવકના દાખલા મેળવવા અર્થે અરજદારનું એકરારનામું)</div>
+          </div>
+
+          <div class="doc-body">
+            <p class="doc-paragraph">
+              હું નીચે સહી કરનાર અરજદાર <strong>${escapeHtml(String(answers.fullName || answers.applicantName || ''))}</strong>, 
+              ઉંમર આશરે <strong>${escapeHtml(String(answers.age || ''))}</strong> વર્ષ, 
+              ધંધો/વ્યવસાય: <strong>${escapeHtml(String(answers.occupation || ''))}</strong>, 
+              રહેવાસી: <strong>${escapeHtml(String(answers.address || ''))}</strong>, 
+              આથી સત્યનિષ્ઠાપૂર્વક જાહેર કરું છું કે:
+            </p>
+
+            <div class="doc-statement-box">
+              <p><strong>વાર્ષિક આવકની વિગત:</strong></p>
+              <p>મારા કુટુંબના તમામ સભ્યોની તમામ સાધનોમાંથી થતી કુલ વાર્ષિક આવક આશરે રૂ. <strong>${escapeHtml(String(answers.annualIncome || answers.incomeAmount || ''))}</strong> (અંકે રૂપિયા પૂરા) થાય છે.</p>
+              <p class="mt-2"><strong>આવકનું મુખ્ય સાધન:</strong> ${escapeHtml(String(answers.incomeSource || answers.occupation || 'ખેતી / છૂટક મજૂરી / વ્યાપાર'))}</p>
+            </div>
+
+            <p class="doc-paragraph">
+              આ આવક અંગે સરકાર સમક્ષ મેં રજૂ કરેલ વિગત સંપૂર્ણ સાચી છે. જો આ વિગત ભવિષ્યમાં ખોટી સાબિત થાય તો સરકારી લાભો પાછા ખેંચી લેવા અને ભારતીય કાનૂની જોગવાઈ મુજબ શિક્ષાત્મક પગલાં ભરવા હું જવાબદાર રહીશ.
+            </p>
+          </div>
+
+          <div class="doc-footer">
+            <div class="doc-meta-left">
+              <p><strong>તારીખ:</strong> ${escapeHtml(String(answers.declarationDate || answers.date || ''))}</p>
+              <p><strong>સ્થળ:</strong> ${escapeHtml(String(answers.place || 'ગાંધીનગર'))}</p>
+            </div>
+            <div class="doc-meta-right">
+              <div class="signature-line"></div>
+              <p><strong>અરજદારની સહી</strong></p>
+              <p>(${escapeHtml(String(answers.fullName || answers.applicantName || ''))})</p>
+            </div>
+          </div>
+        `;
+      } else {
+        bodyContent = `
+          <div class="doc-header">
+            <div class="doc-authority">COLLECTOR OFFICE, GANDHINAGAR (REVENUE DEPARTMENT)</div>
+            <div class="doc-title">ANNUAL FAMILY INCOME DECLARATION</div>
+            <div class="doc-subtitle">(Citizen declaration for Income Certificate issuance)</div>
+          </div>
+
+          <div class="doc-body">
+            <p class="doc-paragraph">
+              I, the undersigned applicant <strong>${escapeHtml(String(answers.fullName || answers.applicantName || ''))}</strong>, 
+              aged about <strong>${escapeHtml(String(answers.age || ''))}</strong> years, 
+              Occupation: <strong>${escapeHtml(String(answers.occupation || ''))}</strong>, 
+              residing at <strong>${escapeHtml(String(answers.address || ''))}</strong>, 
+              do hereby solemnly affirm and state as follows:
+            </p>
+
+            <div class="doc-statement-box">
+              <p><strong>Annual Income Declaration:</strong></p>
+              <p>The total aggregate annual income of my family from all sources is approximately Rs. <strong>${escapeHtml(String(answers.annualIncome || answers.incomeAmount || ''))}</strong> per annum.</p>
+              <p class="mt-2"><strong>Primary Income Source:</strong> ${escapeHtml(String(answers.incomeSource || answers.occupation || 'Agriculture / Daily Wages / Small Business'))}</p>
+            </div>
+
+            <p class="doc-paragraph">
+              I certify that the information given above is correct to the best of my knowledge. If found fraudulent or misstated, I shall be liable to criminal and administrative penalties under the law.
+            </p>
+          </div>
+
+          <div class="doc-footer">
+            <div class="doc-meta-left">
+              <p><strong>Date:</strong> ${escapeHtml(String(answers.declarationDate || answers.date || ''))}</p>
+              <p><strong>Place:</strong> ${escapeHtml(String(answers.place || 'Gandhinagar'))}</p>
+            </div>
+            <div class="doc-meta-right">
+              <div class="signature-line"></div>
+              <p><strong>Signature of Applicant</strong></p>
+              <p>(${escapeHtml(String(answers.fullName || answers.applicantName || ''))})</p>
+            </div>
+          </div>
+        `;
+      }
+      break;
+    }
+
     default: {
       bodyContent = `
         <div class="doc-header">
@@ -453,4 +623,79 @@ export function getDocumentStyles(): string {
       }
     }
   `;
+}
+
+export function normalizeAnswersForTemplate(
+  answers: Record<string, any>,
+  targetFieldKeys: string[] = []
+): Record<string, any> {
+  const result: Record<string, any> = { ...answers };
+
+  const nameVal = answers.fullName || answers.deponentName || answers.applicantName;
+  if (nameVal) {
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('fullName')) {
+      if (!result.fullName) result.fullName = nameVal;
+    }
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('deponentName')) {
+      if (!result.deponentName) result.deponentName = nameVal;
+    }
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('applicantName')) {
+      if (!result.applicantName) result.applicantName = nameVal;
+    }
+  }
+
+  const addrVal = answers.address || answers.deponentAddress || answers.currentAddress;
+  if (addrVal) {
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('address')) {
+      if (!result.address) result.address = addrVal;
+    }
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('deponentAddress')) {
+      if (!result.deponentAddress) result.deponentAddress = addrVal;
+    }
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('currentAddress')) {
+      if (!result.currentAddress) result.currentAddress = addrVal;
+    }
+  }
+
+  const ageVal = answers.age || answers.deponentAge;
+  if (ageVal !== undefined) {
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('age')) {
+      if (result.age === undefined) result.age = ageVal;
+    }
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('deponentAge')) {
+      if (result.deponentAge === undefined) result.deponentAge = ageVal;
+    }
+  }
+
+  const parentVal = answers.parentSpouseName || answers.fatherName || answers.fatherHusbandName;
+  if (parentVal) {
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('parentSpouseName')) {
+      if (!result.parentSpouseName) result.parentSpouseName = parentVal;
+    }
+  }
+
+  const dateVal = answers.declarationDate || answers.affidavitDate || answers.date;
+  if (dateVal) {
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('declarationDate')) {
+      if (!result.declarationDate) result.declarationDate = dateVal;
+    }
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('affidavitDate')) {
+      if (!result.affidavitDate) result.affidavitDate = dateVal;
+    }
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('date')) {
+      if (!result.date) result.date = dateVal;
+    }
+  }
+
+  const placeVal = answers.place;
+  if (placeVal && (targetFieldKeys.length === 0 || targetFieldKeys.includes('place'))) {
+    if (!result.place) result.place = placeVal;
+  }
+
+  const occVal = answers.occupation;
+  if (occVal && (targetFieldKeys.length === 0 || targetFieldKeys.includes('occupation'))) {
+    if (!result.occupation) result.occupation = occVal;
+  }
+
+  return result;
 }

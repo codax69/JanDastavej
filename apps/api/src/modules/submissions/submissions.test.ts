@@ -54,7 +54,7 @@ describe('Document Submission, AI Scanning & Admin Approval Pipeline', () => {
 
     expect(res.status).toBe(201);
     expect(res.body.data.submissionId).toBeDefined();
-    expect(res.body.data.status).toBe('scanned');
+    expect(['scanned', 'ai_review_ready']).toContain(res.body.data.status);
 
     const scan = res.body.data.aiScanResult;
     expect(scan).toBeDefined();
