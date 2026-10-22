@@ -6,6 +6,7 @@ import App from './App';
 describe('App component', () => {
   it('renders brand heading', async () => {
     render(<App />);
-    expect(await screen.findByText(/JanDastavej/i)).toBeDefined();
+    const headings = await screen.findAllByText(/JanDastavej/i);
+    expect(headings.length).toBeGreaterThan(0);
   });
 });

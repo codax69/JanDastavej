@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -11,10 +11,12 @@ import {
   ShieldCheck,
   AlertCircle,
   FileText,
+  UploadCloud,
 } from 'lucide-react';
 import { api, ApiClientError } from '../../api/client.js';
 import { useLanguage } from '../../context/LanguageContext.js';
 import { useSessionReuse } from '../../context/SessionReuseContext.js';
+import { useCitizenAuth } from '../../context/CitizenAuthContext.js';
 import { StepIndicator } from '../../components/shared/StepIndicator.js';
 import { Button } from '../../components/ui/Button.js';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card.js';
@@ -25,10 +27,14 @@ import { Checkbox } from '../../components/ui/Checkbox.js';
 import { Alert } from '../../components/ui/Alert.js';
 import { FormSkeleton } from '../../components/ui/Skeleton.js';
 import { Badge } from '../../components/ui/Badge.js';
+import { CitizenAuthModal } from '../../components/auth/CitizenAuthModal.js';
+import { PrivacyNoticeModal } from '../../components/privacy/PrivacyNoticeModal.js';
+import { ExtractionReviewModal } from '../../components/documents/ExtractionReviewModal.js';
 
 export function ServiceBundleFormPage() {
   const { slug } = useParams<{ slug: string }>();
   const { language } = useLanguage();
+  const { citizen } = useCitizenAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const navigationAnswers = location.state?.answers;
@@ -68,7 +74,78 @@ export function ServiceBundleFormPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
+
+  // Upload & Extraction Modal States (Feature Addendum 2)
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [uploadDocType, setUploadDocType] = useState('id_proof');
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [extractedData, setExtractedData] = useState<{ document: any; extraction: any } | null>(null);
+  const [filledFromDocKeys, setFilledFromDocKeys] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleOpenUpload = async () => {
+    if (!citizen) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    try {
+      const res = await api.getConsents();
+      const hasProcess = (res?.data || []).some((c: any) => c.scope === 'process' && c.granted && !c.revokedAt);
+      if (!hasProcess) {
+        setShowPrivacyModal(true);
+        return;
+      }
+    } catch {
+      setShowPrivacyModal(true);
+      return;
+    }
+
+    setUploadOpen(true);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const res = await api.uploadDocument(file, uploadDocType, false);
+      setExtractedData(res.data);
+      setShowReviewModal(true);
+      setUploadOpen(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch (err: any) {
+      setUploadError(err.message || 'Failed to scan document.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleConfirmExtraction = (
+    confirmedItems: Array<{ fieldKey: string; value: string }>,
+    keepInVault: boolean
+  ) => {
+    const newAnswers = { ...answers };
+    const newlyFilledKeys: string[] = [];
+    for (const item of confirmedItems) {
+      newAnswers[item.fieldKey] = item.value;
+      newlyFilledKeys.push(item.fieldKey);
+    }
+    setAnswers(newAnswers);
+    setFilledFromDocKeys((prev) => Array.from(new Set([...prev, ...newlyFilledKeys])));
+
+    if (keepInVault && extractedData?.document?._id) {
+      api.keepDocument(extractedData.document._id, 30).catch(() => {});
+    }
+  };
 
   const handleFieldChange = (key: string, value: any) => {
     setAnswers((prev) => ({ ...prev, [key]: value }));
@@ -105,6 +182,7 @@ export function ServiceBundleFormPage() {
         place: language === 'gu' ? 'ગાંધીનગર' : 'Gandhinagar',
         declarationDate: new Date().toISOString().split('T')[0],
       });
+      setFilledFromDocKeys([]);
       setErrors({});
       clearAllData();
     }
@@ -141,6 +219,8 @@ export function ServiceBundleFormPage() {
       return;
     }
 
+    if (isSubmittingRef.current || submitting) return;
+    isSubmittingRef.current = true;
     setSubmitting(true);
     setGeneralError(null);
 
@@ -171,6 +251,7 @@ export function ServiceBundleFormPage() {
         setGeneralError(err.message || 'Failed to generate documents. Please try again.');
       }
     } finally {
+      isSubmittingRef.current = false;
       setSubmitting(false);
     }
   };
@@ -198,6 +279,107 @@ export function ServiceBundleFormPage() {
           <ArrowLeft className="h-4 w-4" />
           <span>{language === 'gu' ? 'સેવા વિગત પર પાછા જાઓ' : 'Back to Service Details'}</span>
         </Link>
+      </div>
+
+      {/* Optional Upload Supporting Document Entry Point (Feature Addendum 2) */}
+      <div className="bg-card border border-primary/20 rounded-xl p-4 sm:p-5 shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <UploadCloud className="h-5 w-5 text-primary" />
+              <h2 className="font-bold text-sm sm:text-base text-foreground">
+                {language === 'gu'
+                  ? 'તમારો દસ્તાવેજ અપલોડ કરી વિગતો ભરો (વૈકલ્પિક)'
+                  : 'Upload supporting document to fill details (Optional)'}
+              </h2>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {language === 'gu'
+                ? 'આધાર, પાન અથવા રેશનકાર્ડ સ્કેન કરી તમામ દસ્તાવેજો માટે સામાન્ય વિગતો આપોઆપ ભરો. તમારી સમીક્ષા પછી જ લાગુ થશે.'
+                : 'Scan an ID/address proof to pre-fill citizen details across all bundle documents. You review every value.'}
+            </p>
+          </div>
+
+          {!uploadOpen && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleOpenUpload}
+              className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5 shrink-0"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>{language === 'gu' ? 'દસ્તાવેજ અપલોડ કરો' : 'Upload Document'}</span>
+            </Button>
+          )}
+        </div>
+
+        {uploadOpen && (
+          <div className="pt-3 border-t border-border space-y-3">
+            {uploadError && (
+              <Alert variant="destructive" title={language === 'gu' ? 'અપલોડ ક્ષતિ' : 'Upload Error'}>
+                {uploadError}
+              </Alert>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-foreground block mb-1">
+                  {language === 'gu' ? 'દસ્તાવેજનો પ્રકાર' : 'Document Type'}
+                </label>
+                <select
+                  value={uploadDocType}
+                  onChange={(e) => setUploadDocType(e.target.value)}
+                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-xs"
+                >
+                  <option value="id_proof">{language === 'gu' ? 'ઓળખનો પુરાવો (ID Proof)' : 'ID Proof (Aadhaar / Voter ID / PAN)'}</option>
+                  <option value="address_proof">{language === 'gu' ? 'સરનામાનો પુરાવો (Address Proof)' : 'Address Proof (Ration / Electricity / Tax)'}</option>
+                  <option value="previous_affidavit">{language === 'gu' ? 'અગાઉનું સોગંદનામું (Previous Affidavit)' : 'Previous Affidavit'}</option>
+                  <option value="other">{language === 'gu' ? 'અન્ય સહાયક દસ્તાવેજ (Other)' : 'Other Supporting Document'}</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-foreground block mb-1">
+                  {language === 'gu' ? 'ફાઇલ પસંદ કરો (PDF, JPG, PNG ≤ 10MB)' : 'Select File (PDF, JPG, PNG ≤ 10MB)'}
+                </label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/pdf,image/png,image/jpeg"
+                  capture="environment"
+                  onChange={handleFileChange}
+                  disabled={uploading}
+                  className="w-full text-xs text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {uploading && (
+              <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg flex items-center gap-2.5 text-xs text-primary font-medium animate-pulse">
+                <Sparkles className="h-4 w-4 shrink-0 animate-spin" />
+                <span>
+                  {language === 'gu'
+                    ? 'સુરક્ષા તપાસ અને લખાણ સ્કેન થઈ રહ્યું છે... કૃપા કરીને રાહ જુઓ.'
+                    : 'Running safety scan & local OCR extraction... Please wait.'}
+                </span>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setUploadOpen(false)}
+                disabled={uploading}
+                className="text-xs"
+              >
+                {language === 'gu' ? 'બંધ કરો' : 'Close'}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       <Card className="shadow-xs border-border">
@@ -285,7 +467,16 @@ export function ServiceBundleFormPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <Input
-                    label={language === 'gu' ? 'અરજદારનું પૂર્ણ નામ *' : 'Applicant Full Name *'}
+                    label={
+                      <span className="inline-flex items-center gap-1.5 flex-wrap">
+                        <span>{language === 'gu' ? 'અરજદારનું પૂર્ણ નામ *' : 'Applicant Full Name *'}</span>
+                        {filledFromDocKeys.includes('fullName') && (
+                          <Badge variant="outline" className="text-[10px] text-primary border-primary/40 py-0 px-1.5 font-normal">
+                            {language === 'gu' ? 'તમારા દસ્તાવેજમાંથી' : 'from your document'}
+                          </Badge>
+                        )}
+                      </span>
+                    }
                     value={answers.fullName || ''}
                     onChange={(e) => handleFieldChange('fullName', e.target.value)}
                     error={errors.fullName}
@@ -296,7 +487,16 @@ export function ServiceBundleFormPage() {
 
                 <div>
                   <Input
-                    label={language === 'gu' ? 'પિતા અથવા પતિનું નામ *' : 'Father / Husband Name *'}
+                    label={
+                      <span className="inline-flex items-center gap-1.5 flex-wrap">
+                        <span>{language === 'gu' ? 'પિતા અથવા પતિનું નામ *' : 'Father / Husband Name *'}</span>
+                        {filledFromDocKeys.includes('parentSpouseName') && (
+                          <Badge variant="outline" className="text-[10px] text-primary border-primary/40 py-0 px-1.5 font-normal">
+                            {language === 'gu' ? 'તમારા દસ્તાવેજમાંથી' : 'from your document'}
+                          </Badge>
+                        )}
+                      </span>
+                    }
                     value={answers.parentSpouseName || ''}
                     onChange={(e) => handleFieldChange('parentSpouseName', e.target.value)}
                     placeholder={language === 'gu' ? 'દા.ત. કાંતિભાઈ પટેલ' : 'e.g. Kantibhai Patel'}
@@ -305,7 +505,16 @@ export function ServiceBundleFormPage() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <Input
-                    label={language === 'gu' ? 'ઉંમર (વર્ષ)' : 'Age (years)'}
+                    label={
+                      <span className="inline-flex items-center gap-1.5 flex-wrap">
+                        <span>{language === 'gu' ? 'ઉંમર (વર્ષ)' : 'Age (years)'}</span>
+                        {filledFromDocKeys.includes('age') && (
+                          <Badge variant="outline" className="text-[10px] text-primary border-primary/40 py-0 px-1.5 font-normal">
+                            {language === 'gu' ? 'તમારા દસ્તાવેજમાંથી' : 'from your document'}
+                          </Badge>
+                        )}
+                      </span>
+                    }
                     type="number"
                     value={answers.age || ''}
                     onChange={(e) => handleFieldChange('age', e.target.value)}
@@ -322,7 +531,16 @@ export function ServiceBundleFormPage() {
 
                 <div className="sm:col-span-2">
                   <Textarea
-                    label={language === 'gu' ? 'કાયમી રહેઠાણનું સરનામું *' : 'Permanent Residential Address *'}
+                    label={
+                      <span className="inline-flex items-center gap-1.5 flex-wrap">
+                        <span>{language === 'gu' ? 'કાયમી રહેઠાણનું સરનામું *' : 'Permanent Residential Address *'}</span>
+                        {filledFromDocKeys.includes('address') && (
+                          <Badge variant="outline" className="text-[10px] text-primary border-primary/40 py-0 px-1.5 font-normal">
+                            {language === 'gu' ? 'તમારા દસ્તાવેજમાંથી' : 'from your document'}
+                          </Badge>
+                        )}
+                      </span>
+                    }
                     value={answers.address || ''}
                     onChange={(e) => handleFieldChange('address', e.target.value)}
                     error={errors.address}
@@ -334,7 +552,16 @@ export function ServiceBundleFormPage() {
 
                 <div>
                   <Input
-                    label={language === 'gu' ? 'સ્થળ' : 'Place'}
+                    label={
+                      <span className="inline-flex items-center gap-1.5 flex-wrap">
+                        <span>{language === 'gu' ? 'સ્થળ' : 'Place'}</span>
+                        {filledFromDocKeys.includes('place') && (
+                          <Badge variant="outline" className="text-[10px] text-primary border-primary/40 py-0 px-1.5 font-normal">
+                            {language === 'gu' ? 'તમારા દસ્તાવેજમાંથી' : 'from your document'}
+                          </Badge>
+                        )}
+                      </span>
+                    }
                     value={answers.place || ''}
                     onChange={(e) => handleFieldChange('place', e.target.value)}
                     placeholder="Gandhinagar"
@@ -511,6 +738,43 @@ export function ServiceBundleFormPage() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Citizen Authentication Modal */}
+      <CitizenAuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false);
+          handleOpenUpload();
+        }}
+      />
+
+      {/* Privacy Notice & Consent Modal (DPDP Act 2023) */}
+      <PrivacyNoticeModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        onConsentSaved={() => {
+          setShowPrivacyModal(false);
+          setUploadOpen(true);
+        }}
+        requireProcessScope={true}
+      />
+
+      {/* Extraction Review Modal (UD-04, UD-05) */}
+      {extractedData && (
+        <ExtractionReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          documentData={extractedData.document}
+          extractionItems={(extractedData.extraction?.items || []).map((item: any) => ({
+            fieldKey: item.fieldKey,
+            value: item.valueEnc,
+            confidence: item.confidence,
+            sourcePage: item.page,
+          }))}
+          onConfirm={handleConfirmExtraction}
+        />
+      )}
     </div>
   );
 }

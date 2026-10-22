@@ -51,6 +51,7 @@ export function DynamicFormPage() {
   const [filledFromDocKeys, setFilledFromDocKeys] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
 
   // Upload & Extraction Modal States
@@ -167,8 +168,9 @@ export function DynamicFormPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!version) return;
+    if (!version || isSubmittingRef.current || submitting) return;
 
+    isSubmittingRef.current = true;
     setSubmitting(true);
     setGeneralError(null);
     setErrors({});
@@ -202,6 +204,7 @@ export function DynamicFormPage() {
         setGeneralError(err.message || 'An unexpected error occurred. Please check your entries.');
       }
     } finally {
+      isSubmittingRef.current = false;
       setSubmitting(false);
     }
   };
