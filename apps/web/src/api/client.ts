@@ -206,6 +206,7 @@ export const api = {
       body: JSON.stringify({
         sessionIds,
         title,
+        disclaimerAccepted: true,
       }),
       credentials: 'include',
     });
@@ -355,10 +356,15 @@ export const api = {
     return request<{ data: any[] }>('/admin/reports');
   },
 
-  async updateAdminReport(id: string, status: string, notes?: string): Promise<{ data: any }> {
+  async updateAdminReport(
+    id: string,
+    status: string,
+    adminNotes?: string,
+    markDisputed?: boolean
+  ): Promise<{ data: any }> {
     return request<{ data: any }>(`/admin/reports/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ status, notes }),
+      body: JSON.stringify({ status, adminNotes, markDisputed }),
     });
   },
 

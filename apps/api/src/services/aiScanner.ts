@@ -205,16 +205,36 @@ export class AiScannerService {
     let isSourceOfficial = false;
 
     if (input.sourceUrl) {
-      const url = input.sourceUrl.trim();
-      // SSRF Protection: forbid internal/private addresses
-      if (/^(https?:\/\/)?(localhost|127\.0\.0\.1|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|169\.254\.)/i.test(url)) {
+      let isPrivateOrInvalid = false;
+      let parsedHostname = '';
+
+      try {
+        const parsed = new URL(input.sourceUrl.trim());
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+          isPrivateOrInvalid = true;
+        } else {
+          parsedHostname = parsed.hostname.toLowerCase();
+          const isLocalhost = parsedHostname === 'localhost' || parsedHostname.endsWith('.localhost');
+          const isIpv6 = parsedHostname.startsWith('[') || parsedHostname.includes(':');
+          const isNumericOrHex = /^(0x[0-9a-f]+|\d+)$/i.test(parsedHostname) || /^\d+(\.\d+){1,3}$/.test(parsedHostname);
+          const isPrivateIp = /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|169\.254\.|0\.)/.test(parsedHostname);
+
+          if (isLocalhost || isIpv6 || isNumericOrHex || isPrivateIp) {
+            isPrivateOrInvalid = true;
+          }
+        }
+      } catch {
+        isPrivateOrInvalid = true;
+      }
+
+      if (isPrivateOrInvalid) {
         sourceFindings.push({
           category: 'source',
           severity: 'critical',
           message: 'SSRF Warning: Provided source URL points to a private or internal network address.',
         });
         warnings.push('Security Alert: Private IP address in source URL rejected.');
-      } else if (/\.(gov\.in|nic\.in)(\/|$)/i.test(url)) {
+      } else if (/(^|\.)(gov\.in|nic\.in)$/i.test(parsedHostname)) {
         isSourceOfficial = true;
         sourceFindings.push({
           category: 'source',

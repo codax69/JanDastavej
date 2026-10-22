@@ -495,6 +495,16 @@ generationsRouter.post('/service-bundle', async (req: Request, res: Response, ne
       throw new JanDastavejError('NOT_FOUND', `Service '${serviceSlug}' not found.`, 404);
     }
 
+    const allowedSlugs = new Set((service.requiredTemplates || []).map((r: any) => (typeof r === 'string' ? r : r.templateSlug)));
+    const invalidSlug = selectedTemplateSlugs.find((slug) => !allowedSlugs.has(slug));
+    if (invalidSlug) {
+      throw new JanDastavejError(
+        'VALIDATION_ERROR',
+        `Template '${invalidSlug}' is not part of service '${serviceSlug}'.`,
+        400
+      );
+    }
+
     // Find templates and their published versions
     const templates = await TemplateModel.find({
       slug: { $in: selectedTemplateSlugs },
@@ -513,19 +523,47 @@ generationsRouter.post('/service-bundle', async (req: Request, res: Response, ne
     }).lean();
 
     const versionMap = new Map(versions.map((v) => [String(v.templateId), v]));
+    const templateBySlug = new Map(templates.map((t) => [t.slug, t]));
 
-    const sessions = [];
-    const htmlSections: string[] = [];
+    // Preserve selectedTemplateSlugs order and validate all normalized answers first
+    const preparedDocs: {
+      tpl: (typeof templates)[0];
+      version: (typeof versions)[0];
+      normalizedAnswers: Record<string, any>;
+    }[] = [];
 
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 mins TTL
+    for (const slug of selectedTemplateSlugs) {
+      const tpl = templateBySlug.get(slug);
+      if (!tpl) continue;
 
-    for (const tpl of templates) {
       const version = versionMap.get(String(tpl._id));
-      if (!version) continue;
+      if (!version) {
+        throw new JanDastavejError('NOT_FOUND', `Published template version not found for '${tpl.slug}'.`, 404);
+      }
 
       const fieldKeys = (version.fields as any[]).map((f: any) => f.key);
       const normalizedAnswers = normalizeAnswersForTemplate(answers, fieldKeys);
 
+      const validation = validateAndSanitizeAnswers(version.fields, normalizedAnswers, language);
+      if (!validation.isValid) {
+        throw new JanDastavejError(
+          'VALIDATION_ERROR',
+          language === 'gu'
+            ? 'કૃપા કરીને લાલ રંગથી દર્શાવેલી જરૂરી વિગતો યોગ્ય રીતે ભરો.'
+            : 'Please correct the highlighted fields.',
+          400,
+          validation.errors
+        );
+      }
+
+      preparedDocs.push({ tpl, version, normalizedAnswers });
+    }
+
+    const sessions = [];
+    const htmlSections: string[] = [];
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 mins TTL
+
+    for (const { tpl, version, normalizedAnswers } of preparedDocs) {
       const previewHtml = renderDocumentHtml({
         layoutKey: version.layoutKey,
         language,
@@ -576,30 +614,49 @@ generationsRouter.post('/service-bundle', async (req: Request, res: Response, ne
 // POST /api/v1/generations/service-bundle/pdf - Combined PDF download for all documents in a service bundle
 generationsRouter.post('/service-bundle/pdf', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { sessionIds, title = 'JanDastavej-Service-Bundle' } = req.body;
-    if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
-      throw new JanDastavejError('VALIDATION_ERROR', 'sessionIds array is required.', 400);
+    const { sessionIds, title = 'JanDastavej-Service-Bundle', disclaimerAccepted } = req.body;
+    if (disclaimerAccepted !== true) {
+      throw new JanDastavejError('VALIDATION_ERROR', 'You must accept the legal disclaimer before downloading.', 400);
     }
 
-    const validIds = sessionIds.filter((id) => Types.ObjectId.isValid(id));
-    const sessions = (await GenerationSessionModel.find({
+    if (!Array.isArray(sessionIds) || sessionIds.length === 0 || sessionIds.length > 10) {
+      throw new JanDastavejError('VALIDATION_ERROR', 'sessionIds must be an array of 1 to 10 session IDs.', 400);
+    }
+
+    const validIds = sessionIds.filter((id) => typeof id === 'string' && Types.ObjectId.isValid(id));
+    if (validIds.length === 0) {
+      throw new JanDastavejError('VALIDATION_ERROR', 'No valid session IDs provided.', 400);
+    }
+
+    const fetchedSessions = (await GenerationSessionModel.find({
       _id: { $in: validIds },
+      expiresAt: { $gt: new Date() },
     }).lean()) as unknown as (IGenerationSession & { _id: Types.ObjectId })[];
 
-    if (sessions.length === 0) {
+    const sessionMap = new Map(fetchedSessions.map((s) => [String(s._id), s]));
+    const orderedSessions = validIds
+      .map((id) => sessionMap.get(id))
+      .filter((s): s is NonNullable<typeof s> => Boolean(s));
+
+    if (orderedSessions.length === 0) {
       throw new JanDastavejError('NOT_FOUND', 'No valid generation sessions found.', 404);
     }
 
-    const combinedHtml = sessions
+    const safeTitle =
+      (typeof title === 'string'
+        ? title.replace(/[^a-zA-Z0-9_\-\u0A80-\u0AFF\s]/g, '').trim().slice(0, 80)
+        : '') || 'JanDastavej-Service-Bundle';
+
+    const combinedHtml = orderedSessions
       .map((s) => s.previewHtml)
       .join('<div style="page-break-before: always; height: 1px; margin: 0; padding: 0;"></div>');
 
-    const pdfBuffer = await generateDocumentPdf(combinedHtml, title);
+    const pdfBuffer = await generateDocumentPdf(combinedHtml, safeTitle);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="${title}.pdf"`
+      `attachment; filename="${encodeURIComponent(safeTitle)}.pdf"`
     );
     res.send(pdfBuffer);
   } catch (err) {

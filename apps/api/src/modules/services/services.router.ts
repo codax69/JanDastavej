@@ -8,20 +8,21 @@ export const servicesRouter = Router();
 // GET /api/v1/services - Searchable & filterable directory of citizen services
 servicesRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     const { category, department, search, language = 'gu' } = req.query;
 
     const query: Record<string, any> = { status: 'active' };
 
-    if (category && category !== 'all') {
+    if (typeof category === 'string' && category !== 'all') {
       query.category = category;
     }
 
-    if (department && department !== 'all') {
+    if (typeof department === 'string' && department !== 'all') {
       query.department = department;
     }
 
     if (search && typeof search === 'string' && search.trim()) {
-      const q = search.trim();
+      const q = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       query.$or = [
         { title: { $regex: q, $options: 'i' } },
         { titleGu: { $regex: q, $options: 'i' } },

@@ -30,6 +30,7 @@ import { Input } from '../../components/ui/Input.js';
 import { Textarea } from '../../components/ui/Textarea.js';
 import { Select } from '../../components/ui/Select.js';
 import { Checkbox } from '../../components/ui/Checkbox.js';
+import { DetailPageSkeleton } from '../../components/ui/Skeleton.js';
 import { renderDocumentHtml, getDocumentStyles, TemplateField } from '@jandastavej/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -461,7 +462,7 @@ export function AdminTemplateEditorPage() {
   };
 
   if (isLoading || !template || !currentVersion) {
-    return <div className="p-8 text-center text-muted-foreground text-sm">Loading template editor...</div>;
+    return <DetailPageSkeleton />;
   }
 
   // Synthetic preview answers generated from fields
@@ -497,6 +498,15 @@ export function AdminTemplateEditorPage() {
     answers: sampleAnswers,
     isDemoOnly: true,
   });
+
+  const hasDatePlace =
+    fields.some((f) => f.key === 'declarationDate' || f.key === 'date') &&
+    fields.some((f) => f.key === 'place');
+  const hasNameAddress =
+    fields.some((f) => f.key.toLowerCase().includes('name')) &&
+    fields.some((f) => f.key.toLowerCase().includes('address'));
+  const hasGujaratiLabels = fields.length > 0 && fields.every((f) => !!f.labelGu);
+  const auditPassed = hasDatePlace && hasNameAddress && hasGujaratiLabels;
 
   return (
     <div className="space-y-6">
@@ -597,6 +607,7 @@ export function AdminTemplateEditorPage() {
             {currentVersion.status === 'draft' && (
               <Button
                 size="sm"
+                disabled={!auditPassed}
                 onClick={() =>
                   handleTransition(
                     `${API_BASE}/admin/template-versions/${currentVersion._id}/submit-review`
@@ -1110,11 +1121,8 @@ export function AdminTemplateEditorPage() {
 
                 <div className="p-4 rounded-xl border border-border bg-card">
                   <div className="text-xs text-muted-foreground font-semibold">Legal Clause Status</div>
-                  <div className="text-2xl font-black text-success mt-1">
-                    {fields.some((f) => f.key === 'declarationDate' || f.key === 'date') &&
-                    fields.some((f) => f.key === 'place')
-                      ? 'Compliant'
-                      : 'Attention'}
+                  <div className={`text-2xl font-black mt-1 ${auditPassed ? 'text-success' : 'text-amber-500'}`}>
+                    {auditPassed ? 'Compliant' : 'Attention'}
                   </div>
                 </div>
               </div>
@@ -1135,7 +1143,7 @@ export function AdminTemplateEditorPage() {
                       </div>
                     </div>
                     <div>
-                      {fields.every((f) => !!f.labelGu) ? (
+                      {hasGujaratiLabels ? (
                         <Badge variant="success" className="gap-1">
                           <CheckCircle className="h-3 w-3" />
                           <span>100% Translated</span>
@@ -1160,8 +1168,7 @@ export function AdminTemplateEditorPage() {
                       </div>
                     </div>
                     <div>
-                      {fields.some((f) => f.key === 'declarationDate' || f.key === 'date') &&
-                      fields.some((f) => f.key === 'place') ? (
+                      {hasDatePlace ? (
                         <Badge variant="success" className="gap-1">
                           <CheckCircle className="h-3 w-3" />
                           <span>Verified Present</span>
@@ -1184,8 +1191,7 @@ export function AdminTemplateEditorPage() {
                       </div>
                     </div>
                     <div>
-                      {fields.some((f) => f.key.toLowerCase().includes('name')) &&
-                      fields.some((f) => f.key.toLowerCase().includes('address')) ? (
+                      {hasNameAddress ? (
                         <Badge variant="success" className="gap-1">
                           <CheckCircle className="h-3 w-3" />
                           <span>Present</span>
@@ -1215,14 +1221,35 @@ export function AdminTemplateEditorPage() {
               </div>
 
               {/* Action Banner */}
-              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div
+                className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                  auditPassed
+                    ? 'bg-primary/5 border-primary/20'
+                    : 'bg-amber-500/10 border-amber-500/30'
+                }`}
+              >
                 <div className="space-y-1">
-                  <div className="text-sm font-bold text-primary flex items-center gap-1.5">
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Audit Ready for Administrative Review</span>
+                  <div
+                    className={`text-sm font-bold flex items-center gap-1.5 ${
+                      auditPassed ? 'text-primary' : 'text-amber-600 dark:text-amber-400'
+                    }`}
+                  >
+                    {auditPassed ? (
+                      <>
+                        <CheckCircle className="h-4 w-4" />
+                        <span>Audit Ready for Administrative Review</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="h-4 w-4" />
+                        <span>Audit Attention: Missing Mandatory Legal Clauses</span>
+                      </>
+                    )}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    This template version conforms to Gujarat digital document standards. You may transition to review or publish.
+                    {auditPassed
+                      ? 'This template version conforms to Gujarat digital document standards. You may transition to review or publish.'
+                      : 'Please ensure Date/Place, Name/Address, and Gujarati translations are complete before submitting for review.'}
                   </div>
                 </div>
 
@@ -1230,6 +1257,7 @@ export function AdminTemplateEditorPage() {
                   {currentVersion.status === 'draft' && (
                     <Button
                       size="sm"
+                      disabled={!auditPassed}
                       onClick={() =>
                         handleTransition(
                           `${API_BASE}/admin/template-versions/${currentVersion._id}/submit-review`

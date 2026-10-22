@@ -23,6 +23,7 @@ import { Button } from '../../components/ui/Button.js';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card.js';
 import { Input } from '../../components/ui/Input.js';
 import { Textarea } from '../../components/ui/Textarea.js';
+import { FormSkeleton } from '../../components/ui/Skeleton.js';
 import { Select } from '../../components/ui/Select.js';
 import { Checkbox } from '../../components/ui/Checkbox.js';
 import { Alert } from '../../components/ui/Alert.js';
@@ -206,12 +207,7 @@ export function DynamicFormPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="space-y-6 max-w-3xl mx-auto">
-        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-        <div className="h-96 bg-card border border-border rounded-lg animate-pulse" />
-      </div>
-    );
+    return <FormSkeleton />;
   }
 
   if (error || !template || !version) {

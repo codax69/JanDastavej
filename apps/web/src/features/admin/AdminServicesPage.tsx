@@ -28,6 +28,22 @@ import { Input } from '../../components/ui/Input.js';
 import { Textarea } from '../../components/ui/Textarea.js';
 import { Select } from '../../components/ui/Select.js';
 import { Alert } from '../../components/ui/Alert.js';
+import { TableSkeleton } from '../../components/ui/Skeleton.js';
+import { ServiceCategorySchema } from '@jandastavej/shared';
+
+const SERVICE_CATEGORY_LABELS: Record<string, string> = {
+  revenue: 'Revenue (મહેસૂલ)',
+  social_welfare: 'Social Welfare (સમાજ કલ્યાણ)',
+  civil_supplies: 'Civil Supplies & Ration (અન્ન અને નાગરિક પુરવઠો)',
+  urban_development: 'Urban Development (શહેરી વિકાસ)',
+  legal_affairs: 'Legal Affairs (કાનૂની બાબતો)',
+  general_administration: 'General Administration (સામાન્ય વહીવટ)',
+};
+
+const CATEGORY_OPTIONS = ServiceCategorySchema.options.map((cat) => ({
+  value: cat,
+  label: SERVICE_CATEGORY_LABELS[cat] || cat,
+}));
 
 export function AdminServicesPage() {
   const navigate = useNavigate();
@@ -135,6 +151,8 @@ export function AdminServicesPage() {
     setPurpose('');
     setPurposeGu('');
     setSelectedTemplates([]);
+    setSteps([]);
+    setStepsGu([]);
     setEditingService(null);
     setFormError(null);
     setFormSuccess(null);
@@ -358,11 +376,11 @@ export function AdminServicesPage() {
               className="h-9 px-3 text-xs rounded-md border border-input bg-background font-medium"
             >
               <option value="all">All Categories</option>
-              <option value="revenue">Revenue</option>
-              <option value="legal">Legal & Affidavits</option>
-              <option value="identity">Identity & Civil</option>
-              <option value="social_welfare">Social Welfare</option>
-              <option value="certificate">Certificates</option>
+              {CATEGORY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -380,7 +398,9 @@ export function AdminServicesPage() {
 
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-16 text-center text-muted-foreground text-sm">Loading services...</div>
+            <div className="p-4">
+              <TableSkeleton rows={5} columns={6} />
+            </div>
           ) : filteredServices.length === 0 ? (
             <div className="p-16 text-center text-muted-foreground text-sm">
               No services match the active filters.
@@ -540,13 +560,7 @@ export function AdminServicesPage() {
                       <Select
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        options={[
-                          { value: 'revenue', label: 'Revenue Department' },
-                          { value: 'legal', label: 'Legal & Affidavits' },
-                          { value: 'identity', label: 'Identity & Civil' },
-                          { value: 'social_welfare', label: 'Social Welfare Schemes' },
-                          { value: 'certificate', label: 'Certificates & Attestations' },
-                        ]}
+                        options={CATEGORY_OPTIONS}
                       />
                     </div>
                     <Input

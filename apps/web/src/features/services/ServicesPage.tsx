@@ -8,6 +8,7 @@ import { StepIndicator } from '../../components/shared/StepIndicator.js';
 import { Button } from '../../components/ui/Button.js';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/Card.js';
 import { Badge } from '../../components/ui/Badge.js';
+import { CardGridSkeleton } from '../../components/ui/Skeleton.js';
 
 export function ServicesPage() {
   const { language } = useLanguage();
@@ -128,11 +129,7 @@ export function ServicesPage() {
 
       {/* Services List / Loading / Empty */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-64 rounded-lg bg-card border border-border animate-pulse p-6" />
-          ))}
-        </div>
+        <CardGridSkeleton count={6} columns={3} />
       ) : filteredServices.length === 0 ? (
         <div className="p-12 text-center bg-card border border-border rounded-lg space-y-4">
           <Layers className="h-10 w-10 text-muted-foreground mx-auto" />

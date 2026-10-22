@@ -21,6 +21,7 @@ import { Button } from '../../components/ui/Button.js';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card.js';
 import { Badge } from '../../components/ui/Badge.js';
 import { Alert } from '../../components/ui/Alert.js';
+import { DetailPageSkeleton } from '../../components/ui/Skeleton.js';
 
 export function ServiceDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -34,12 +35,7 @@ export function ServiceDetailPage() {
   });
 
   if (isLoading) {
-    return (
-      <div className="space-y-6 max-w-4xl mx-auto">
-        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-        <div className="h-64 bg-card border border-border rounded-lg animate-pulse" />
-      </div>
-    );
+    return <DetailPageSkeleton />;
   }
 
   if (error || !data?.data) {

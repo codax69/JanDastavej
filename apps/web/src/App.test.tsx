@@ -4,8 +4,8 @@ import React from 'react';
 import App from './App';
 
 describe('App component', () => {
-  it('renders brand heading', () => {
+  it('renders brand heading', async () => {
     render(<App />);
-    expect(screen.getByText('JanDastavej')).toBeDefined();
+    expect(await screen.findByText(/JanDastavej/i)).toBeDefined();
   });
 });

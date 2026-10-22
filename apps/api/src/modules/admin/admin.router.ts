@@ -996,6 +996,15 @@ adminRouter.post(
         throw new JanDastavejError('NOT_FOUND', 'Submission not found.', 404);
       }
 
+      const reviewableStates = ['ai_review_ready', 'extraction_failed', 'under_review'];
+      if (!reviewableStates.includes(submission.status)) {
+        throw new JanDastavejError(
+          'CONFLICT',
+          `Cannot request correction for submission in status '${submission.status}'. Allowed statuses: ${reviewableStates.join(', ')}.`,
+          409
+        );
+      }
+
       const { notes } = parseResult.data;
       submission.status = 'needs_correction';
       submission.correctionNotes = notes.trim();

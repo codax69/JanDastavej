@@ -200,20 +200,48 @@ export function SubmitDocumentPage() {
 
       {scanError && <Alert variant="destructive" title="Error">{scanError}</Alert>}
 
-      {/* SUCCESS STATE */}
+      {/* SUCCESS / SUBMISSION STATE */}
       {scanResult && submissionId ? (
-        <Card className="border-success/40 bg-success/5 shadow-md space-y-6 p-6">
+        <Card
+          className={`${
+            scanResult.verificationStatus === 'EXTRACTION_FAILED'
+              ? 'border-destructive/40 bg-destructive/5'
+              : 'border-success/40 bg-success/5'
+          } shadow-md space-y-6 p-6`}
+        >
           <div className="flex items-start gap-4">
-            <div className="bg-success/20 p-3 rounded-full shrink-0">
-              <CheckCircle className="h-8 w-8 text-success" />
+            <div
+              className={`${
+                scanResult.verificationStatus === 'EXTRACTION_FAILED'
+                  ? 'bg-destructive/20'
+                  : 'bg-success/20'
+              } p-3 rounded-full shrink-0`}
+            >
+              {scanResult.verificationStatus === 'EXTRACTION_FAILED' ? (
+                <AlertCircle className="h-8 w-8 text-destructive" />
+              ) : (
+                <CheckCircle className="h-8 w-8 text-success" />
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold text-foreground">
-                  {language === 'gu' ? 'ચકાસણી સફળ! સબમિશન પૂર્ણ થયું' : 'Verification Complete & Submitted!'}
+                  {scanResult.verificationStatus === 'EXTRACTION_FAILED'
+                    ? language === 'gu'
+                      ? 'માળખું ઓળખવામાં નિષ્ફળતા! મેન્યુઅલ સમીક્ષા માટે મોકલેલ'
+                      : 'Structure Extraction Failed (Sent for Manual Review)'
+                    : language === 'gu'
+                    ? 'ચકાસણી સફળ! સબમિશન પૂર્ણ થયું'
+                    : 'Verification Complete & Submitted!'}
                 </h2>
-                <Badge variant="success" className="text-xs">
-                  {scanResult.confidenceScore}% Compliance Score
+                <Badge
+                  variant={scanResult.verificationStatus === 'EXTRACTION_FAILED' ? 'destructive' : 'success'}
+                  className="text-xs"
+                >
+                  {scanResult.confidenceScore}%{' '}
+                  {scanResult.verificationStatus === 'EXTRACTION_FAILED'
+                    ? 'Extraction Failed'
+                    : 'Compliance Score'}
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -252,7 +280,11 @@ export function SubmitDocumentPage() {
             <div className="mt-4 border border-border rounded-md overflow-hidden">
               <div className="bg-muted px-4 py-2 font-bold text-xs text-foreground flex justify-between">
                 <span>Detected Form Fields ({scanResult.extractedFields.length})</span>
-                <span className="text-muted-foreground font-normal">Ready for Admin Review</span>
+                <span className="text-muted-foreground font-normal">
+                  {scanResult.verificationStatus === 'EXTRACTION_FAILED'
+                    ? 'Requires Manual Schema Definition'
+                    : 'Ready for Admin Review'}
+                </span>
               </div>
               <div className="divide-y divide-border text-xs max-h-48 overflow-y-auto">
                 {scanResult.extractedFields.map((f, idx) => (

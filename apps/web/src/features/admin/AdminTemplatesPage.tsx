@@ -9,6 +9,7 @@ import { Input } from '../../components/ui/Input.js';
 import { Textarea } from '../../components/ui/Textarea.js';
 import { Select } from '../../components/ui/Select.js';
 import { Alert } from '../../components/ui/Alert.js';
+import { TableSkeleton } from '../../components/ui/Skeleton.js';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1';
 
@@ -254,7 +255,9 @@ export function AdminTemplatesPage() {
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-12 text-center text-muted-foreground text-sm">Loading template registry...</div>
+            <div className="p-4">
+              <TableSkeleton rows={5} columns={6} />
+            </div>
           ) : filteredTemplates.length === 0 ? (
             <div className="p-12 text-center text-muted-foreground text-sm">No templates found matching filters.</div>
           ) : (

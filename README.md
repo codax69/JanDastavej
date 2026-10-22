@@ -136,13 +136,13 @@ npm run build --workspaces
 
 ## 6. Supported Citizen Services & Documents
 
-| Service | Category | Required Declarations | Physical Proofs Required |
+| Service | Category | Required Declarations & Documents | Physical Proofs Required |
 |---|---|---|---|
-| **Income Certificate** (આવક પ્રમાણપત્ર) | Revenue | Income Self-Declaration, General Affidavit | Ration Card, Electricity Bill, 7/12 Extract |
-| **Domicile Certificate** (ડોમિસાઇલ પ્રમાણપત્ર) | General Administration | General Affidavit, Undertaking | School Leaving Cert, Residence Proof, Electoral Card |
-| **Name Change Affidavit** (નામ બદલવા અંગેનું સોગંદનામું) | Legal / Gazette | Name Change Affidavit | Govt Photo ID, Gazette Copy, Marriage Cert |
-| **Senior Citizen Certificate** (વરિષ્ઠ નાગરિક પ્રમાણપત્ર) | Social Welfare | General Affidavit | Age Proof (Birth Cert / School LC), Address Proof |
-| **New Electricity/Water Connection** (નવું વીજળી/પાણી જોડાણ) | Utilities / Municipal | Utility No-Objection & Compliance Undertaking | Property Tax Receipt, Ownership Proof, NOC |
+| **Income Certificate** (આવક પ્રમાણપત્ર) | Revenue | Self-Declaration (`sample-declaration`), Income Declaration (`income-declaration`), Address Declaration (`sample-address-declaration`) | Ration Card, Electricity Bill, Salary Slip / Talati Report |
+| **Domicile Certificate** (ડોમિસાઇલ પ્રમાણપત્ર) | General Administration | Address Declaration (`sample-address-declaration`), General Affidavit (`sample-affidavit`), Self-Declaration (`sample-declaration`) | School Leaving Certificate (10+ Years), Electricity Bills, Tax Receipts |
+| **Name Change Declaration** (નામ સુધારણા સોગંદનામું) | Legal Affairs | General Affidavit (`sample-affidavit`), Self-Declaration (`sample-declaration`) | Old Govt Photo ID, Birth Certificate / School LC, Gazette / Marriage Cert |
+| **Senior Citizen Certificate** (વરિષ્ઠ નાગરિક પ્રમાણપત્ર) | Social Welfare | Self-Declaration (`sample-declaration`), Address Declaration (`sample-address-declaration`) | Age Proof (Birth Cert / Voter ID), Address Proof, Passport Photos |
+| **New Utility Connection** (નવું જોડાણ બાંહેધરી) | Urban Development | Utility Undertaking (`undertaking-utility`), Address Declaration (`sample-address-declaration`) | Property Tax Bill, Index-2 Copy, Ownership Proof |
 
 ---
 

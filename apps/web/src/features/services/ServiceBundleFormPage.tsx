@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -23,12 +23,15 @@ import { Textarea } from '../../components/ui/Textarea.js';
 import { Select } from '../../components/ui/Select.js';
 import { Checkbox } from '../../components/ui/Checkbox.js';
 import { Alert } from '../../components/ui/Alert.js';
+import { FormSkeleton } from '../../components/ui/Skeleton.js';
 import { Badge } from '../../components/ui/Badge.js';
 
 export function ServiceBundleFormPage() {
   const { slug } = useParams<{ slug: string }>();
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
+  const navigationAnswers = location.state?.answers;
   const { optInReuse, setOptInReuse, savedAnswers, saveAnswers, clearAllData } = useSessionReuse();
 
   const { data, isLoading } = useQuery({
@@ -59,6 +62,7 @@ export function ServiceBundleFormPage() {
       place: language === 'gu' ? 'ગાંધીનગર' : 'Gandhinagar',
       declarationDate: new Date().toISOString().split('T')[0],
       ...savedAnswers,
+      ...(navigationAnswers || {}),
     };
   });
 
@@ -172,12 +176,7 @@ export function ServiceBundleFormPage() {
   };
 
   if (isLoading || !service) {
-    return (
-      <div className="space-y-6 max-w-3xl mx-auto">
-        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-        <div className="h-96 bg-card border border-border rounded-lg animate-pulse" />
-      </div>
-    );
+    return <FormSkeleton />;
   }
 
   const hasIncomeDoc = selectedDocs.includes('income-declaration');

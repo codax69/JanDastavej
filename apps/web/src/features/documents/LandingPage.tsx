@@ -17,6 +17,7 @@ import { api } from '../../api/client.js';
 import { useLanguage } from '../../context/LanguageContext.js';
 import { Button } from '../../components/ui/Button.js';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/Card.js';
+import { CardGridSkeleton } from '../../components/ui/Skeleton.js';
 import { Badge } from '../../components/ui/Badge.js';
 import { Alert } from '../../components/ui/Alert.js';
 
@@ -138,11 +139,7 @@ export function LandingPage() {
         </div>
 
         {servicesLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="h-56 rounded-lg bg-muted/60 animate-pulse border border-border" />
-            ))}
-          </div>
+          <CardGridSkeleton count={3} columns={3} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {services.slice(0, 3).map((srv) => (
@@ -278,11 +275,7 @@ export function LandingPage() {
         </div>
 
         {templatesLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="h-64 rounded-lg bg-muted/60 animate-pulse border border-border" />
-            ))}
-          </div>
+          <CardGridSkeleton count={3} columns={3} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {templates.slice(0, 3).map((tpl) => (

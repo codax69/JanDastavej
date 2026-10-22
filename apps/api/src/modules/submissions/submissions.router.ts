@@ -14,23 +14,14 @@ import {
   optionalCitizenAuth,
   AuthenticatedCitizenRequest,
 } from '../auth/citizenAuth.middleware.js';
-import { UserModel } from '../../models/User.js';
+import { verifyAdminSession } from '../admin/auth.middleware.js';
 
 export const submissionsRouter = Router();
 
 // Helper to check if request is from an authenticated admin
 async function isAdminRequest(req: AuthenticatedCitizenRequest): Promise<boolean> {
-  const sessionCookie = req.cookies?.jd_admin_session;
-  if (!sessionCookie) return false;
-  try {
-    const decoded = Buffer.from(sessionCookie, 'base64').toString('utf8');
-    const data = JSON.parse(decoded);
-    if (!data?.userId) return false;
-    const user = await UserModel.findById(data.userId);
-    return !!(user && user.status === 'active');
-  } catch {
-    return false;
-  }
+  const user = await verifyAdminSession(req as any);
+  return !!user;
 }
 
 // POST /api/v1/submissions - Citizen submits candidate document for review
@@ -195,12 +186,24 @@ submissionsRouter.get(
         (req.citizen && submission.submitterEmail && submission.submitterEmail === req.citizen.identifier);
 
       // If submission was submitted anonymously and guest has direct submission link, allow preview without reviewer private notes
-      if (!isAdmin && !isOwner && submission.submitterUserId) {
-        throw new JanDastavejError(
-          'FORBIDDEN',
-          'Access denied. This candidate template submission is private to its submitter.',
-          403
-        );
+      if (!isAdmin && !isOwner) {
+        if (submission.submitterUserId) {
+          throw new JanDastavejError(
+            'FORBIDDEN',
+            'Access denied. This candidate template submission is private to its submitter.',
+            403
+          );
+        }
+        res.json({
+          data: {
+            _id: submission._id,
+            documentTitle: submission.documentTitle,
+            status: submission.status,
+            createdAt: submission.createdAt,
+            updatedAt: submission.updatedAt,
+          },
+        });
+        return;
       }
 
       res.json({ data: submission });
@@ -223,10 +226,11 @@ submissionsRouter.patch(
       }
 
       const isAdmin = await isAdminRequest(req);
-      const isOwner =
-        !submission.submitterUserId ||
-        (req.citizen && String(submission.submitterUserId) === String(req.citizen._id)) ||
-        (req.citizen && submission.submitterEmail === req.citizen.identifier);
+      const isOwner = Boolean(
+        req.citizen &&
+          ((submission.submitterUserId && String(submission.submitterUserId) === String(req.citizen._id)) ||
+            (submission.submitterEmail && submission.submitterEmail === req.citizen.identifier))
+      );
 
       if (!isAdmin && !isOwner) {
         throw new JanDastavejError('FORBIDDEN', 'Access denied. You cannot modify this submission.', 403);
@@ -253,6 +257,8 @@ submissionsRouter.patch(
 
       if (documentTitle) submission.documentTitle = documentTitle;
       submission.documentText = documentText;
+      submission.fileHash = crypto.createHash('sha256').update(documentText.trim()).digest('hex');
+      submission.fileSize = Buffer.byteLength(documentText, 'utf-8');
       if (additionalNotes) submission.additionalNotes = additionalNotes;
       submission.resubmissionCount = (submission.resubmissionCount || 0) + 1;
 
@@ -297,10 +303,11 @@ submissionsRouter.post(
       }
 
       const isAdmin = await isAdminRequest(req);
-      const isOwner =
-        !submission.submitterUserId ||
-        (req.citizen && String(submission.submitterUserId) === String(req.citizen._id)) ||
-        (req.citizen && submission.submitterEmail === req.citizen.identifier);
+      const isOwner = Boolean(
+        req.citizen &&
+          ((submission.submitterUserId && String(submission.submitterUserId) === String(req.citizen._id)) ||
+            (submission.submitterEmail && submission.submitterEmail === req.citizen.identifier))
+      );
 
       if (!isAdmin && !isOwner) {
         throw new JanDastavejError('FORBIDDEN', 'Access denied. You cannot withdraw this submission.', 403);

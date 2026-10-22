@@ -29,24 +29,30 @@ beforeAll(async () => {
   adminCookie = Array.isArray(adminCookies) ? adminCookies[0] : adminCookies;
 
   // 2. Citizen 1 creation / session (email: citizen1@example.com)
-  const c1 = await CitizenUserModel.findOneAndUpdate(
-    { identifier: 'citizen1@example.com' },
-    { identifier: 'citizen1@example.com', identifierType: 'email', name: 'Citizen One' },
-    { upsert: true, new: true }
-  );
-  citizen1Id = String(c1._id);
-  const payload1 = Buffer.from(JSON.stringify({ userId: citizen1Id })).toString('base64');
-  citizen1Cookie = `jd_citizen_session=${payload1}; Path=/; HttpOnly`;
+  await request(app)
+    .post('/api/v1/auth/otp/request')
+    .send({ identifier: 'citizen1@example.com' });
+  const c1Res = await request(app)
+    .post('/api/v1/auth/otp/verify')
+    .send({ identifier: 'citizen1@example.com', otp: '123456' });
+  expect(c1Res.status).toBe(200);
+  const c1User = await CitizenUserModel.findOne({ identifier: 'citizen1@example.com' });
+  citizen1Id = String(c1User!._id);
+  const c1Cookies = c1Res.headers['set-cookie'];
+  citizen1Cookie = Array.isArray(c1Cookies) ? c1Cookies[0] : c1Cookies;
 
   // 3. Citizen 2 creation / session (email: citizen2@example.com)
-  const c2 = await CitizenUserModel.findOneAndUpdate(
-    { identifier: 'citizen2@example.com' },
-    { identifier: 'citizen2@example.com', identifierType: 'email', name: 'Citizen Two' },
-    { upsert: true, new: true }
-  );
-  citizen2Id = String(c2._id);
-  const payload2 = Buffer.from(JSON.stringify({ userId: citizen2Id })).toString('base64');
-  citizen2Cookie = `jd_citizen_session=${payload2}; Path=/; HttpOnly`;
+  await request(app)
+    .post('/api/v1/auth/otp/request')
+    .send({ identifier: 'citizen2@example.com' });
+  const c2Res = await request(app)
+    .post('/api/v1/auth/otp/verify')
+    .send({ identifier: 'citizen2@example.com', otp: '123456' });
+  expect(c2Res.status).toBe(200);
+  const c2User = await CitizenUserModel.findOne({ identifier: 'citizen2@example.com' });
+  citizen2Id = String(c2User!._id);
+  const c2Cookies = c2Res.headers['set-cookie'];
+  citizen2Cookie = Array.isArray(c2Cookies) ? c2Cookies[0] : c2Cookies;
 });
 
 afterAll(async () => {
@@ -290,6 +296,7 @@ describe('Section 15: 20 Acceptance Criteria End-to-End Test Suite', () => {
           deponentName: 'હરેશભાઈ મગનભાઈ પરમાર',
           parentSpouseName: 'મગનભાઈ પરમાર',
           age: 45,
+          occupation: 'વેપાર',
           currentAddress: 'સેક્ટર ૭, ગાંધીનગર',
           deponentAddress: 'સેક્ટર ૭, ગાંધીનગર',
           annualIncome: 95000,

@@ -23,6 +23,7 @@ import { Button } from '../../components/ui/Button.js';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card.js';
 import { Badge } from '../../components/ui/Badge.js';
 import { Alert } from '../../components/ui/Alert.js';
+import { DetailPageSkeleton } from '../../components/ui/Skeleton.js';
 import { Input } from '../../components/ui/Input.js';
 import { Textarea } from '../../components/ui/Textarea.js';
 import { Select } from '../../components/ui/Select.js';
@@ -170,8 +171,13 @@ export function AdminSubmissionReviewPage() {
   };
 
   const handleRequestCorrection = async () => {
-    const notes = prompt('Enter specific correction instructions for the citizen submitter:');
-    if (!notes) return;
+    const rawNotes = prompt('Enter specific correction instructions for the citizen submitter:');
+    if (rawNotes === null) return;
+    const notes = rawNotes.trim();
+    if (notes.length < 5) {
+      setActionError('Correction notes must be at least 5 characters long.');
+      return;
+    }
 
     try {
       const res = await fetch(`${API_BASE}/admin/submissions/${id}/request-correction`, {
@@ -180,7 +186,10 @@ export function AdminSubmissionReviewPage() {
         credentials: 'include',
         body: JSON.stringify({ notes }),
       });
-      if (!res.ok) throw new Error('Failed to request correction.');
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(resData.error?.message || 'Failed to request correction.');
+      }
       setActionSuccess('Correction request dispatched to submitter.');
       refetch();
     } catch (err: any) {
@@ -264,7 +273,7 @@ export function AdminSubmissionReviewPage() {
   };
 
   if (isLoading || !submission) {
-    return <div className="p-8 text-center text-muted-foreground text-sm">Loading submission review...</div>;
+    return <DetailPageSkeleton />;
   }
 
   // Synthetic answers for document preview

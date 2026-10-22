@@ -8,6 +8,7 @@ import { StepIndicator } from '../../components/shared/StepIndicator.js';
 import { Button } from '../../components/ui/Button.js';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/Card.js';
 import { Badge } from '../../components/ui/Badge.js';
+import { CardGridSkeleton } from '../../components/ui/Skeleton.js';
 
 export function LibraryPage() {
   const { language } = useLanguage();
@@ -120,11 +121,7 @@ export function LibraryPage() {
 
       {/* Loading Skeleton */}
       {isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((n) => (
-            <div key={n} className="h-60 rounded-lg bg-muted/60 animate-pulse border border-border" />
-          ))}
-        </div>
+        <CardGridSkeleton count={6} columns={3} />
       )}
 
       {/* Error state */}

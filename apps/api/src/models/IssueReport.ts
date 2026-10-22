@@ -3,10 +3,19 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 export interface IIssueReport extends Document {
   templateId?: Types.ObjectId;
   templateSlug: string;
-  issueType: 'outdated_format' | 'incorrect_legal_text' | 'missing_fields' | 'formatting_error' | 'other';
+  issueType:
+    | 'outdated_format'
+    | 'incorrect_wording'
+    | 'legal_change'
+    | 'broken_placeholder'
+    | 'incorrect_legal_text'
+    | 'missing_fields'
+    | 'formatting_error'
+    | 'other';
   description: string;
   reporterName?: string;
   reporterEmail?: string;
+  sourceProofUrl?: string;
   status: 'open' | 'investigating' | 'resolved' | 'dismissed';
   adminNotes?: string;
   resolvedBy?: Types.ObjectId;
@@ -21,13 +30,23 @@ const IssueReportSchema = new Schema<IIssueReport>(
     templateSlug: { type: String, required: true, index: true },
     issueType: {
       type: String,
-      enum: ['outdated_format', 'incorrect_legal_text', 'missing_fields', 'formatting_error', 'other'],
+      enum: [
+        'outdated_format',
+        'incorrect_wording',
+        'legal_change',
+        'broken_placeholder',
+        'incorrect_legal_text',
+        'missing_fields',
+        'formatting_error',
+        'other',
+      ],
       required: true,
       index: true,
     },
     description: { type: String, required: true, trim: true },
     reporterName: { type: String, trim: true },
     reporterEmail: { type: String, trim: true, lowercase: true },
+    sourceProofUrl: { type: String, trim: true },
     status: {
       type: String,
       enum: ['open', 'investigating', 'resolved', 'dismissed'],

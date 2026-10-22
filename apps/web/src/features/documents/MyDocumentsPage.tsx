@@ -22,6 +22,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Ca
 import { Badge } from '../../components/ui/Badge.js';
 import { Alert } from '../../components/ui/Alert.js';
 import { CitizenAuthModal } from '../../components/auth/CitizenAuthModal.js';
+import { Skeleton, TableSkeleton } from '../../components/ui/Skeleton.js';
 
 export function MyDocumentsPage() {
   const { citizen, isLoading: authLoading } = useCitizenAuth();
@@ -113,9 +114,12 @@ export function MyDocumentsPage() {
 
   if (authLoading) {
     return (
-      <div className="space-y-4 max-w-4xl mx-auto py-8">
-        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-        <div className="h-64 bg-card border border-border rounded-lg animate-pulse" />
+      <div className="space-y-6 max-w-5xl mx-auto py-4">
+        <div className="space-y-2">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-28 w-full rounded-xl" />
+        </div>
+        <TableSkeleton rows={4} columns={4} />
       </div>
     );
   }
@@ -257,8 +261,17 @@ export function MyDocumentsPage() {
 
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">
-              {language === 'gu' ? 'દસ્તાવેજો લોડ થઈ રહ્યા છે...' : 'Loading documents...'}
+            <div className="p-4 space-y-3">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="flex items-center justify-between p-3 border border-border/60 rounded-lg">
+                  <div className="space-y-1.5 w-1/3">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-8 w-20 rounded-lg" />
+                </div>
+              ))}
             </div>
           ) : documents.length === 0 ? (
             <div className="p-12 text-center space-y-3">

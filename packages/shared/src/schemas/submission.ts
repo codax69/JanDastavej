@@ -134,17 +134,25 @@ export const ApproveSubmissionRequestSchema = z.object({
 });
 export type ApproveSubmissionRequest = z.infer<typeof ApproveSubmissionRequestSchema>;
 
+export const IssueTypeSchema = z.enum([
+  'outdated_format',
+  'incorrect_wording',
+  'legal_change',
+  'broken_placeholder',
+  'incorrect_legal_text',
+  'missing_fields',
+  'formatting_error',
+  'other',
+]);
+export type IssueType = z.infer<typeof IssueTypeSchema>;
+
 export const CreateIssueReportRequestSchema = z.object({
   templateSlug: z.string().min(2).max(100),
-  issueType: z.enum([
-    'outdated_format',
-    'incorrect_legal_text',
-    'missing_fields',
-    'formatting_error',
-    'other',
-  ]),
-  description: z.string().min(10).max(2000),
+  issueType: IssueTypeSchema,
+  description: z.string().min(5).max(2000),
   reporterName: z.string().max(100).optional(),
   reporterEmail: z.string().email().max(120).optional(),
+  contactEmail: z.string().email().max(120).optional(),
+  sourceProofUrl: z.string().url().max(500).optional().or(z.literal('')),
 });
 export type CreateIssueReportRequest = z.infer<typeof CreateIssueReportRequestSchema>;

@@ -297,8 +297,13 @@ export async function generateDocumentDocx(options: DocxGenerationOptions): Prom
       );
     }
   } else if (layoutKey === 'sample_address_declaration') {
-    const years = answers.residingSinceYears || '5';
-    const premises = answers.premisesType === 'rented' ? 'Rented' : 'Self-owned';
+    const years = answers.residingSinceYears != null && answers.residingSinceYears !== '' ? String(answers.residingSinceYears) : '';
+    const premises =
+      answers.premisesType === 'rented'
+        ? (language === 'gu' ? 'ભાડાનું મકાન' : 'Rented')
+        : answers.premisesType === 'parental'
+        ? (language === 'gu' ? 'વાલી/વારસાગત' : 'Parental')
+        : (language === 'gu' ? 'પોતાની માલિકીનું' : 'Self-owned');
     if (language === 'gu') {
       paragraphs.push(
         new Paragraph({
@@ -343,6 +348,211 @@ export async function generateDocumentDocx(options: DocxGenerationOptions): Prom
         new Paragraph({
           spacing: { after: 300 },
           children: [new TextRun({ text: `Premises Ownership: ${premises}` })],
+        })
+      );
+    }
+  } else if (layoutKey === 'income_declaration') {
+    const incomeVal = answers.annualIncome || answers.incomeAmount || '';
+    const sourceVal = answers.incomeSource || answers.occupation || (language === 'gu' ? 'ખેતી / છૂટક મજૂરી / વ્યાપાર' : 'Agriculture / Daily Wages / Small Business');
+    if (language === 'gu') {
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 200, line: 360 },
+          children: [
+            new TextRun({ text: 'હું નીચે સહી કરનાર અરજદાર ' }),
+            new TextRun({ text: String(nameVal), bold: true }),
+            new TextRun({ text: `, ઉંમર આશરે ${ageVal} વર્ષ, ધંધો/વ્યવસાય: ` }),
+            new TextRun({ text: String(occVal), bold: true }),
+            new TextRun({ text: ', રહેવાસી: ' }),
+            new TextRun({ text: String(addrVal), bold: true }),
+            new TextRun({ text: ', આથી સત્યનિષ્ઠાપૂર્વક જાહેર કરું છું કે:' }),
+          ],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { before: 200, after: 120 },
+          children: [new TextRun({ text: 'વાર્ષિક આવકની વિગત:', bold: true })],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 120, line: 320 },
+          children: [
+            new TextRun({ text: `મારા કુટુંબના તમામ સભ્યોની તમામ સાધનોમાંથી થતી કુલ વાર્ષિક આવક આશરે રૂ. ${incomeVal} (અંકે રૂપિયા પૂરા) થાય છે.` }),
+          ],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 240, line: 320 },
+          children: [
+            new TextRun({ text: 'આવકનું મુખ્ય સાધન: ', bold: true }),
+            new TextRun({ text: String(sourceVal) }),
+          ],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 300, line: 360 },
+          children: [
+            new TextRun({
+              text: 'આ આવક અંગે સરકાર સમક્ષ મેં રજૂ કરેલ વિગત સંપૂર્ણ સાચી છે. જો આ વિગત ભવિષ્યમાં ખોટી સાબિત થાય તો સરકારી લાભો પાછા ખેંચી લેવા અને ભારતીય કાનૂની જોગવાઈ મુજબ શિક્ષાત્મક પગલાં ભરવા હું જવાબદાર રહીશ.',
+            }),
+          ],
+        })
+      );
+    } else {
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 200, line: 360 },
+          children: [
+            new TextRun({ text: 'I, the undersigned applicant ' }),
+            new TextRun({ text: String(nameVal), bold: true }),
+            new TextRun({ text: `, aged about ${ageVal} years, Occupation: ` }),
+            new TextRun({ text: String(occVal), bold: true }),
+            new TextRun({ text: ', residing at ' }),
+            new TextRun({ text: String(addrVal), bold: true }),
+            new TextRun({ text: ', do hereby solemnly affirm and state as follows:' }),
+          ],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { before: 200, after: 120 },
+          children: [new TextRun({ text: 'Annual Income Declaration:', bold: true })],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 120, line: 320 },
+          children: [
+            new TextRun({ text: `The total aggregate annual income of my family from all sources is approximately Rs. ${incomeVal} per annum.` }),
+          ],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 240, line: 320 },
+          children: [
+            new TextRun({ text: 'Primary Income Source: ', bold: true }),
+            new TextRun({ text: String(sourceVal) }),
+          ],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 300, line: 360 },
+          children: [
+            new TextRun({
+              text: 'I certify that the information given above is correct to the best of my knowledge. If found fraudulent or misstated, I shall be liable to criminal and administrative penalties under the law.',
+            }),
+          ],
+        })
+      );
+    }
+  } else if (layoutKey === 'undertaking_utility') {
+    const undertakingVal = answers.undertakingPurpose || answers.declarationPurpose || (language === 'gu' ? 'નવા જોડાણ અથવા સેવા મેળવવા માટેની તમામ શરતોનું પાલન કરવાની બાંહેધરી.' : 'Undertaking to comply with all statutory municipal regulations and charges.');
+    if (language === 'gu') {
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 200, line: 360 },
+          children: [
+            new TextRun({ text: 'હું નીચે સહી કરનાર અરજદાર ' }),
+            new TextRun({ text: String(nameVal), bold: true }),
+            new TextRun({ text: ', પિતા/પતિનું નામ: ' }),
+            new TextRun({ text: String(parentVal), bold: true }),
+            new TextRun({ text: ', સરનામું: ' }),
+            new TextRun({ text: String(addrVal), bold: true }),
+            new TextRun({ text: ', આથી લેખિત બાંહેધરી આપું છું કે:' }),
+          ],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { before: 200, after: 120 },
+          children: [new TextRun({ text: 'બાંહેધરીનો મુખ્ય વિષય / શરતો:', bold: true })],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 200, line: 320 },
+          children: [new TextRun({ text: String(undertakingVal), italics: true })],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 120, line: 320 },
+          children: [
+            new TextRun({ text: '૧. હું બાંહેધરી આપું છું કે જે મિલકત/જગ્યા માટે અરજી કરેલ છે તે અંગે કોઈ ન્યાયાલયીન વિવાદ કે સ્ટે નથી.' }),
+          ],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 120, line: 320 },
+          children: [
+            new TextRun({ text: '૨. નિયત સરકારી નિયમો, ચાર્જ અને ટેક્સ હું નિયમિતપણે ભરવા બંધાયેલ છું.' }),
+          ],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 300, line: 320 },
+          children: [
+            new TextRun({ text: '૩. જો કોઈ અનધિકૃત બાંધકામ કે ખોટી વિગત જણાશે તો આ જોડાણ રદ કરવા સામે મારો કોઈ હક્ક-દાવો રહેશે નહીં.' }),
+          ],
+        })
+      );
+    } else {
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 200, line: 360 },
+          children: [
+            new TextRun({ text: 'I, the undersigned applicant ' }),
+            new TextRun({ text: String(nameVal), bold: true }),
+            new TextRun({ text: ', Son / Daughter / Wife of ' }),
+            new TextRun({ text: String(parentVal), bold: true }),
+            new TextRun({ text: ', residing at ' }),
+            new TextRun({ text: String(addrVal), bold: true }),
+            new TextRun({ text: ', do hereby undertake and declare as follows:' }),
+          ],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { before: 200, after: 120 },
+          children: [new TextRun({ text: 'Terms and Purpose of Undertaking:', bold: true })],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 200, line: 320 },
+          children: [new TextRun({ text: String(undertakingVal), italics: true })],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 120, line: 320 },
+          children: [
+            new TextRun({ text: '1. I undertake that there is no pending court dispute, injunction, or illegal encroachment regarding the premises.' }),
+          ],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 120, line: 320 },
+          children: [
+            new TextRun({ text: '2. I agree to pay all statutory tariffs, dues, and assessment taxes in accordance with municipal laws.' }),
+          ],
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 300, line: 320 },
+          children: [
+            new TextRun({ text: '3. If any detail furnished herein is found misleading or false, the authority shall be entitled to disconnect or cancel the approval without notice.' }),
+          ],
         })
       );
     }

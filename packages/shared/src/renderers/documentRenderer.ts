@@ -692,9 +692,27 @@ export function normalizeAnswersForTemplate(
     if (!result.place) result.place = placeVal;
   }
 
-  const occVal = answers.occupation;
-  if (occVal && (targetFieldKeys.length === 0 || targetFieldKeys.includes('occupation'))) {
-    if (!result.occupation) result.occupation = occVal;
+  const occVal = answers.occupation || answers.incomeSource;
+  if (occVal) {
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('occupation')) {
+      if (!result.occupation) result.occupation = occVal;
+    }
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('incomeSource')) {
+      if (!result.incomeSource) result.incomeSource = occVal;
+    }
+  }
+
+  const statementVal = answers.declarationPurpose || answers.matterStated || answers.undertakingPurpose || answers.purpose;
+  if (statementVal) {
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('declarationPurpose')) {
+      if (!result.declarationPurpose) result.declarationPurpose = statementVal;
+    }
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('matterStated')) {
+      if (!result.matterStated) result.matterStated = statementVal;
+    }
+    if (targetFieldKeys.length === 0 || targetFieldKeys.includes('undertakingPurpose')) {
+      if (!result.undertakingPurpose) result.undertakingPurpose = statementVal;
+    }
   }
 
   return result;

@@ -30,10 +30,14 @@ const AdminSubmissionReviewPage = lazy(() => import('./features/admin/AdminSubmi
 const AdminAuditPage = lazy(() => import('./features/admin/AdminAuditPage.js').then((m) => ({ default: m.AdminAuditPage })));
 const AdminServicesPage = lazy(() => import('./features/admin/AdminServicesPage.js').then((m) => ({ default: m.AdminServicesPage })));
 
+import { CardGridSkeleton, Skeleton } from './components/ui/Skeleton.js';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000,
+      staleTime: 5 * 60 * 1000, // 5 min instant cache
+      gcTime: 30 * 60 * 1000, // 30 min garbage collection retention
+      refetchOnWindowFocus: false, // Prevent jittery refetch on tab switch
       retry: 1,
     },
   },
@@ -41,16 +45,13 @@ const queryClient = new QueryClient({
 
 function RouteLoadingFallback() {
   return (
-    <div className="w-full min-h-[60vh] flex flex-col items-center justify-center space-y-4">
-      <div className="relative">
-        <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-2.5 h-2.5 rounded-full bg-primary animate-ping" />
-        </div>
+    <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-200">
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-8 w-72" />
+        <Skeleton className="h-4 w-96 max-w-full" />
       </div>
-      <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest animate-pulse">
-        Loading JanDastavej...
-      </div>
+      <CardGridSkeleton count={6} />
     </div>
   );
 }

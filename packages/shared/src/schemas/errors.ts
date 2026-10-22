@@ -16,6 +16,7 @@ export const ErrorCodeSchema = z.enum([
   'QUOTA_EXCEEDED',
   'EXTRACTION_FAILED',
   'DOCUMENT_EXPIRED',
+  'CONFLICT',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 

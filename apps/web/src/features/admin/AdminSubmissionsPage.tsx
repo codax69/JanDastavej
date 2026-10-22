@@ -17,6 +17,7 @@ import {
 import { Button } from '../../components/ui/Button.js';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card.js';
 import { Badge } from '../../components/ui/Badge.js';
+import { TableSkeleton } from '../../components/ui/Skeleton.js';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1';
 
@@ -160,7 +161,9 @@ export function AdminSubmissionsPage() {
 
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-12 text-center text-muted-foreground text-sm">Loading submissions...</div>
+            <div className="p-4">
+              <TableSkeleton rows={5} columns={6} />
+            </div>
           ) : filteredSubmissions.length === 0 ? (
             <div className="p-12 text-center text-muted-foreground text-sm">
               No submissions found matching criteria.

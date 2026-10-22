@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { Types } from 'mongoose';
-import { JanDastavejError } from '@jandastavej/shared';
+import { JanDastavejError, IssueTypeSchema } from '@jandastavej/shared';
 import { TemplateModel, ITemplate } from '../../models/Template.js';
 import { TemplateVersionModel } from '../../models/TemplateVersion.js';
 import { IssueReportModel } from '../../models/IssueReport.js';
@@ -10,6 +10,7 @@ export const templatesRouter = Router();
 // GET /api/v1/templates - Public list of published templates
 templatesRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     const { search, category, language } = req.query;
 
     const filter: Record<string, any> = {
@@ -152,22 +153,30 @@ templatesRouter.post('/:slug/report', async (req: Request, res: Response, next: 
       throw new JanDastavejError('NOT_FOUND', `Template '${slug}' not found.`, 404);
     }
 
-    const { issueType, description, reporterName, reporterEmail } = req.body;
-    if (!issueType || !description || typeof description !== 'string' || description.trim().length < 5) {
+    const { issueType, description, reporterName, reporterEmail, contactEmail, sourceProofUrl } = req.body;
+    if (!description || typeof description !== 'string' || description.trim().length < 5) {
       throw new JanDastavejError(
         'VALIDATION_ERROR',
-        'Please specify the issue type and provide a description of at least 5 characters.',
+        'Please provide an issue description of at least 5 characters.',
         400
       );
     }
 
+    const issueTypeResult = IssueTypeSchema.safeParse(issueType);
+    if (!issueTypeResult.success) {
+      throw new JanDastavejError('VALIDATION_ERROR', `Invalid issueType '${issueType}'.`, 400);
+    }
+
+    const email = reporterEmail || contactEmail;
+
     const report = await IssueReportModel.create({
       templateId: template._id,
       templateSlug: slug,
-      issueType,
+      issueType: issueTypeResult.data,
       description: description.trim(),
       reporterName: reporterName?.trim(),
-      reporterEmail: reporterEmail?.trim(),
+      reporterEmail: email?.trim(),
+      sourceProofUrl: sourceProofUrl?.trim() || undefined,
       status: 'open',
     });
 

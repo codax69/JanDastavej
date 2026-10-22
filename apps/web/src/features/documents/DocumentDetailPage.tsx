@@ -12,6 +12,7 @@ import { Alert } from '../../components/ui/Alert.js';
 import { Input } from '../../components/ui/Input.js';
 import { Textarea } from '../../components/ui/Textarea.js';
 import { Select } from '../../components/ui/Select.js';
+import { DetailPageSkeleton } from '../../components/ui/Skeleton.js';
 
 export function DocumentDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -63,12 +64,7 @@ export function DocumentDetailPage() {
   });
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-        <div className="h-64 bg-card border border-border rounded-lg animate-pulse" />
-      </div>
-    );
+    return <DetailPageSkeleton />;
   }
 
   if (error || !data?.data) {
@@ -264,6 +260,7 @@ export function DocumentDetailPage() {
                         options={[
                           { value: 'outdated_format', label: language === 'gu' ? 'જૂનું ફોર્મેટ / નિયમ બદલાયો છે' : 'Outdated Format / Rule Changed' },
                           { value: 'incorrect_wording', label: language === 'gu' ? 'ખોટી કાનૂની ભાષા' : 'Incorrect Legal Wording' },
+                          { value: 'legal_change', label: language === 'gu' ? 'કાનૂની ફેરફાર / સુધારો' : 'Legal Change / Amendment' },
                           { value: 'broken_placeholder', label: language === 'gu' ? 'પ્લેસહોલ્ડર ખામી' : 'Broken Placeholder' },
                           { value: 'other', label: language === 'gu' ? 'અન્ય બાબત' : 'Other' },
                         ]}

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card.js';
 import { Badge } from '../../components/ui/Badge.js';
+import { TableSkeleton } from '../../components/ui/Skeleton.js';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1';
 
@@ -70,7 +71,9 @@ export function AdminAuditPage() {
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground text-sm">Loading audit events...</div>
+            <div className="p-4">
+              <TableSkeleton rows={5} columns={5} />
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">

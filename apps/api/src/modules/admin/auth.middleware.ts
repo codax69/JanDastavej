@@ -6,30 +6,31 @@ export interface AuthenticatedRequest extends Request {
   user?: IUser;
 }
 
+export async function verifyAdminSession(req: Request): Promise<IUser | null> {
+  const sessionCookie = req.cookies?.jd_admin_session;
+  if (!sessionCookie) return null;
+
+  try {
+    const decoded = Buffer.from(sessionCookie, 'base64').toString('utf8');
+    const data = JSON.parse(decoded);
+    if (!data?.userId) return null;
+    const user = await UserModel.findById(data.userId);
+    if (!user || user.status !== 'active') return null;
+    return user;
+  } catch {
+    return null;
+  }
+}
+
 export async function requireAuth(
   req: AuthenticatedRequest,
   _res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const sessionCookie = req.cookies?.jd_admin_session;
-    if (!sessionCookie) {
+    const user = await verifyAdminSession(req);
+    if (!user) {
       throw new JanDastavejError('UNAUTHORIZED', 'Authentication required to access admin resources.', 401);
-    }
-
-    // In this reference implementation, sessionCookie is signed or contains the user ID
-    let userId: string;
-    try {
-      const decoded = Buffer.from(sessionCookie, 'base64').toString('utf8');
-      const data = JSON.parse(decoded);
-      userId = data.userId;
-    } catch {
-      throw new JanDastavejError('UNAUTHORIZED', 'Invalid session credentials. Please sign in again.', 401);
-    }
-
-    const user = await UserModel.findById(userId);
-    if (!user || user.status !== 'active') {
-      throw new JanDastavejError('UNAUTHORIZED', 'Account is invalid or deactivated.', 401);
     }
 
     req.user = user;
