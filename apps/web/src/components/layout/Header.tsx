@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Globe,
-  Shield,
   ShieldCheck,
   HelpCircle,
   Trash2,
@@ -21,6 +20,7 @@ import { useLanguage } from '../../context/LanguageContext.js';
 import { useSessionReuse } from '../../context/SessionReuseContext.js';
 import { useCitizenAuth } from '../../context/CitizenAuthContext.js';
 import { Button } from '../ui/Button.js';
+import { Logo } from '../ui/Logo.js';
 import { CitizenAuthModal } from '../auth/CitizenAuthModal.js';
 import { cn } from '../../lib/utils.js';
 
@@ -71,26 +71,20 @@ export function Header() {
 
   return (
     <>
-      <header className="border-b border-border bg-card/95 backdrop-blur-md sticky top-0 z-40 shadow-xs">
+      <header className="border-t-2 border-t-accent border-b border-border bg-card/95 backdrop-blur-md sticky top-0 z-40 shadow-xs">
         <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           
           {/* Brand Wordmark & Emblem */}
           <Link
             to="/"
-            className="flex items-center gap-3 group shrink-0 focus-visible:outline-2 focus-visible:outline-primary rounded-lg py-1"
+            className="flex items-center gap-1.5 group shrink-0 focus-visible:outline-2 focus-visible:outline-primary rounded-lg py-1"
             aria-label="JanDastavej Home"
           >
-            {/* Typography */}
+            <Logo className="h-8 w-auto group-hover:scale-105 transition-transform shrink-0 mb-1" />
             <div className="flex flex-col justify-center">
-              <span className="text-xl font-black text-primary tracking-tight leading-tight group-hover:text-primary/85 transition-colors">
+              <span className="text-xl font-black text-primary tracking-tight leading-none group-hover:text-primary/85 transition-colors">
                 JanDastavej
               </span>
-              <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-muted-foreground font-medium leading-none whitespace-nowrap">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                <span>
-                  {language === 'gu' ? 'કલેક્ટર કચેરી, ગાંધીનગર' : 'Collector Office, Gandhinagar'}
-                </span>
-              </div>
             </div>
           </Link>
 
@@ -126,22 +120,8 @@ export function Header() {
             {/* Subtle Divider */}
             <div className="h-5 w-px bg-border/80 shrink-0 mx-0.5" />
 
-            {/* Utility Actions (Admin, Help, Privacy, Clear Data) */}
+            {/* Utility Actions (Help, Privacy, Clear Data) */}
             <div className="flex items-center gap-1 xl:gap-1.5">
-              {/* Admin Management Link */}
-              <Link
-                to="/admin/templates"
-                className={cn(
-                  'h-8 inline-flex items-center justify-center gap-1.5 px-2.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer',
-                  location.pathname.startsWith('/admin')
-                    ? 'bg-primary/10 text-primary border border-primary/20 font-bold'
-                    : 'text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20'
-                )}
-                title="Admin Portal"
-              >
-                <Shield className="w-3.5 h-3.5 shrink-0" />
-                <span className="leading-none flex items-center">Admin</span>
-              </Link>
 
               {/* Help Modal Trigger */}
               <button
@@ -330,14 +310,6 @@ export function Header() {
 
             {/* Secondary Utilities */}
             <div className="pt-1 space-y-0.5">
-              <Link
-                to="/admin/templates"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
-              >
-                <Shield className="w-4 h-4 text-primary shrink-0" />
-                <span className="leading-none flex items-center">Admin Portal</span>
-              </Link>
 
               <button
                 type="button"
@@ -408,8 +380,8 @@ export function Header() {
             <div className="text-sm space-y-3 text-muted-foreground leading-relaxed">
               <p>
                 {language === 'gu'
-                  ? 'JanDastavej એ કલેક્ટર કચેરી, ગાંધીનગર માટે નાગરિકોને એફિડેવિટ અને સ્વ-ઘોષણાપત્રો ઝડપથી તૈયાર કરવા માટેનું ડિજિટલ સાધન છે.'
-                  : 'JanDastavej is a digital document preparation tool for the Collector Office, Gandhinagar to assist citizens in preparing affidavits and declarations.'}
+                  ? 'JanDastavej એ નાગરિકોને એફિડેવિટ અને સ્વ-ઘોષણાપત્રો ઝડપથી તૈયાર કરવા માટેનું ડિજિટલ સાધન છે.'
+                  : 'JanDastavej is a digital document preparation tool to assist citizens in preparing affidavits and declarations.'}
               </p>
               <p>
                 {language === 'gu'

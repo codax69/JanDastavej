@@ -172,9 +172,6 @@ export function LibraryPage() {
                   <Badge variant="secondary" className="capitalize text-[11px]">
                     {tpl.category.replace('_', ' ')}
                   </Badge>
-                  <Badge variant="warning" className="text-[10px]">
-                    {language === 'gu' ? 'માત્ર ડેમો' : 'Demo Only'}
-                  </Badge>
                 </div>
                 <CardTitle className="text-lg">
                   {language === 'gu' ? tpl.titleGu : tpl.title}

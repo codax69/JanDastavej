@@ -1041,7 +1041,7 @@ export function AdminTemplateEditorPage() {
                   disabled={!isVersionEditable}
                   value={sourceReference}
                   onChange={(e) => setSourceReference(e.target.value)}
-                  placeholder="Collector Office, Gandhinagar - Standard Prototype Format"
+                  placeholder="Collector Office, Gandhinagar - Standard Format"
                 />
               </div>
             </CardContent>
@@ -1054,7 +1054,6 @@ export function AdminTemplateEditorPage() {
                 <Shield className="h-4 w-4 text-primary" />
                 <span>Simulated Output Verification</span>
               </CardTitle>
-              <Badge variant="outline" className="text-xs">DEMO WATERMARK ACTIVE</Badge>
             </CardHeader>
             <CardContent className="pt-6 bg-muted/40 flex justify-center p-4 overflow-x-auto">
               <style dangerouslySetInnerHTML={{ __html: getDocumentStyles() }} />

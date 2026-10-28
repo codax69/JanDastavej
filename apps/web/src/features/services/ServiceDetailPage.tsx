@@ -83,7 +83,7 @@ export function ServiceDetailPage() {
             </Badge>
             <Badge variant="outline" className="text-emerald-700 dark:text-emerald-400 border-emerald-300">
               <ShieldCheck className="h-3.5 w-3.5 mr-1 inline" />
-              {language === 'gu' ? 'ચકાસાયેલ પ્રોટોટાઇપ ફોર્મેટ' : 'Verified Prototype Checklist'}
+              {language === 'gu' ? 'ચકાસાયેલ ફોર્મેટ' : 'Verified Checklist'}
             </Badge>
             <span className="text-xs text-muted-foreground ml-auto flex items-center gap-1">
               <Calendar className="h-3.5 w-3.5" />
@@ -118,12 +118,6 @@ export function ServiceDetailPage() {
         </CardHeader>
 
         <CardContent className="pt-6 space-y-8">
-          {/* Demo Prototype Notice */}
-          <Alert variant="warning" title={language === 'gu' ? 'પ્રોટોટાઇપ સૂચના' : 'Prototype Notice'}>
-            {language === 'gu'
-              ? 'આ દસ્તાવેજ યાદી ગાંધીનગર કલેક્ટર કચેરી માટે પ્રસ્તાવિત પ્રોટોટાઇપ મુજબ તૈયાર કરવામાં આવી છે. જનરેટ કરેલા દસ્તાવેજો કાનૂની અધિકારી સમક્ષ રજૂ કરતા પહેલા સહી અથવા નોટરાઇઝેશન કરાવવું જરૂરી છે.'
-              : 'This checklist is structured for the Gandhinagar administrative prototype. Generated documents are drafts for citizen self-attestation or execution before competent authorities.'}
-          </Alert>
 
           {/* Section 1: Required Document Checklists */}
           <div className="space-y-4">

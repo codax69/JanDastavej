@@ -50,17 +50,10 @@ export function LandingPage() {
 
   return (
     <div className="space-y-12">
-      {/* Demo Warning Banner */}
-      <Alert variant="warning" title={language === 'gu' ? 'ડેમો પ્રોટોટાઇપ સૂચના' : 'Demo Prototype Notice'}>
-        {language === 'gu'
-          ? 'આ એપ્લિકેશન કલેક્ટર કચેરી, ગાંધીનગર માટે પ્રસ્તાવિત ડિજિટલ પ્રોટોટાઇપ છે. અહીં આપેલા તમામ ફોર્મેટ ડેમો હેતુ માટે છે અને સત્તાવાર માન્યતા પછી જ સત્તાવાર ગણાશે.'
-          : 'This is an engineering prototype for Collector Office, Gandhinagar. All generated documents are labelled for demo use and require official validation before formal submission.'}
-      </Alert>
-
       {/* Hero Section */}
       <section className="text-center space-y-4 max-w-3xl mx-auto pt-4">
         <Badge variant="secondary" className="px-3 py-1 text-xs uppercase tracking-wider font-bold">
-          {language === 'gu' ? 'કલેક્ટર કચેરી, ગાંધીનગર' : 'Collector Office, Gandhinagar'}
+          {language === 'gu' ? 'ડિજિટલ નાગરિક દસ્તાવેજ સેવા' : 'Digital Citizen Document Portal'}
         </Badge>
         <h1 className="text-3xl sm:text-5xl font-black text-primary tracking-tight leading-tight">
           {language === 'gu'
@@ -284,9 +277,6 @@ export function LandingPage() {
                   <div className="flex items-center justify-between mb-2">
                     <Badge variant="secondary" className="capitalize text-[11px]">
                       {tpl.category.replace('_', ' ')}
-                    </Badge>
-                    <Badge variant="warning" className="text-[10px]">
-                      {language === 'gu' ? 'માત્ર ડેમો' : 'Demo Only'}
                     </Badge>
                   </div>
                   <CardTitle className="line-clamp-2">

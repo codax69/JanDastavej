@@ -347,7 +347,6 @@ export function ServiceBundleFormPage() {
                   ref={fileInputRef}
                   type="file"
                   accept="application/pdf,image/png,image/jpeg"
-                  capture="environment"
                   onChange={handleFileChange}
                   disabled={uploading}
                   className="w-full text-xs text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
@@ -386,7 +385,6 @@ export function ServiceBundleFormPage() {
         <CardHeader className="border-b border-border pb-4 space-y-2">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <Badge variant="secondary">{language === 'gu' ? service.departmentGu : service.department}</Badge>
-            <Badge variant="warning">{language === 'gu' ? 'માત્ર ડેમો હેતુ માટે' : 'Demo Prototype'}</Badge>
           </div>
           <CardTitle className="text-xl sm:text-2xl text-primary font-bold">
             {language === 'gu' ? service.titleGu : service.title}

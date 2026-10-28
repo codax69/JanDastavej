@@ -186,7 +186,7 @@ export function ServicesPage() {
                     {language === 'gu' ? 'ચકાસણી:' : 'Status:'}
                   </span>
                   <span className="text-emerald-700 dark:text-emerald-400 font-medium">
-                    {language === 'gu' ? 'પ્રમાણિત પ્રોટોટાઇપ' : 'Verified Prototype Checklist'}
+                    {language === 'gu' ? 'પ્રમાણિત યાદી' : 'Verified Checklist'}
                   </span>
                 </div>
               </CardContent>

@@ -105,7 +105,7 @@ export function AdminLoginPage() {
 
           {/* Quick Demo Credentials Fill Buttons */}
           <div className="pt-4 border-t border-border space-y-2">
-            <div className="text-xs font-semibold text-muted-foreground">Quick Demo Roles (1-Click Fill):</div>
+            <div className="text-xs font-semibold text-muted-foreground">Quick Roles (1-Click Fill):</div>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"

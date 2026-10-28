@@ -583,7 +583,6 @@ export function AdminSubmissionReviewPage() {
             <Shield className="h-4 w-4 text-primary" />
             <span>Simulated Output Verification (How Citizen will see it)</span>
           </CardTitle>
-          <Badge variant="outline" className="text-xs">DEMO WATERMARK ACTIVE</Badge>
         </CardHeader>
         <CardContent className="pt-6 bg-muted/30 flex justify-center p-4 overflow-x-auto">
           <style dangerouslySetInnerHTML={{ __html: getDocumentStyles() }} />

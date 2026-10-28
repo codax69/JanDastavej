@@ -182,9 +182,6 @@ export function PreviewPage() {
         </Button>
 
         <div className="flex items-center gap-2">
-          <Badge variant="warning" className="text-xs">
-            {language === 'gu' ? 'માત્ર ડેમો હેતુ માટે' : 'Demo Only — Not Official'}
-          </Badge>
           <span className="text-xs text-muted-foreground hidden sm:inline flex items-center gap-1">
             <Clock className="h-3.5 w-3.5" />
             <span>30m Privacy Expiry</span>

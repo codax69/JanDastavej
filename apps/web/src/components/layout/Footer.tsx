@@ -1,35 +1,40 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Lock } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext.js';
+import { Logo } from '../ui/Logo.js';
 
 export function Footer() {
   const { language } = useLanguage();
 
   return (
-    <footer className="border-t border-border bg-card mt-12 py-8 text-center text-xs text-muted-foreground">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-4">
-        <div className="font-semibold text-primary">
-          JanDastavej · {language === 'gu' ? 'કલેક્ટર કચેરી, ગાંધીનગર' : 'Collector Office, Gandhinagar'}
+    <footer className="border-t-2 border-t-accent border-b border-border bg-card mt-16 py-8 text-xs text-muted-foreground">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Portal Info */}
+        <div className="flex items-center gap-1 text-center sm:text-left">
+          <Logo className="h-6 w-auto shrink-0 mb-1" />
+          <span className="font-bold text-foreground leading-none">JanDastavej</span>
+          <span className="mx-2 text-border">·</span>
+          <span>
+            {language === 'gu' ? 'નાગરિક સેવા ડિજિટલ દસ્તાવેજ પોર્ટલ' : 'Citizen Document Portal'}
+          </span>
         </div>
-        <p className="max-w-2xl mx-auto text-muted-foreground/90 leading-relaxed">
-          {language === 'gu'
-            ? 'પ્રોટોટાઇપ વિશિષ્ટતા: માત્ર ડેમો હેતુ માટે — સત્તાવાર ઉપયોગ માટે નથી. કાનૂની અથવા સત્તાવાર ઉપયોગ પહેલાં યોગ્ય સત્તાધિકારી દ્વારા માન્યતા જરૂરી છે.'
-            : 'Prototype specification: Demo only — not for official use. Official templates require formal validation before public deployment.'}
-        </p>
 
-        <div className="pt-2 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground/80">
+        {/* Admin Portal Button */}
+        <div className="flex items-center gap-3">
           <Link
             to="/admin/login"
-            className="inline-flex items-center gap-1.5 hover:text-primary transition-colors py-1 px-2.5 rounded bg-muted/60 border border-border"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border border-primary/20 transition-all duration-150 shadow-2xs"
           >
-            <Lock className="h-3 w-3 text-primary" />
-            <span>{language === 'gu' ? 'અધિકારી પોર્ટલ (Admin Portal)' : 'Staff / Admin Portal'}</span>
+            <Shield className="h-3.5 w-3.5" />
+            <span>{language === 'gu' ? 'અધિકારી પોર્ટલ (Admin Portal)' : 'Admin Portal'}</span>
           </Link>
         </div>
+      </div>
 
-        <div className="text-[11px] text-muted-foreground/60 pt-2 border-t border-border/50">
-          © {new Date().getFullYear()} JanDastavej (PS000221) · Developed with accessible government service design standards
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 pt-4 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-muted-foreground/70 text-center sm:text-left">
+        <div>
+          © {new Date().getFullYear()} JanDastavej · All rights reserved
         </div>
       </div>
     </footer>

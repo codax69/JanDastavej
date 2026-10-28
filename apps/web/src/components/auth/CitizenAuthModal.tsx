@@ -34,7 +34,7 @@ export function CitizenAuthModal({ isOpen, onClose, onSuccess, title }: CitizenA
     setError(null);
     try {
       const res = await requestOtp(identifier.trim());
-      setDemoNotice(res.demoOtp ? `Demo OTP: ${res.demoOtp}` : null);
+      setDemoNotice(res.demoOtp ? `OTP: ${res.demoOtp}` : null);
       setStep('verify');
     } catch (err: any) {
       setError(err.message || 'Failed to send OTP.');
@@ -125,8 +125,8 @@ export function CitizenAuthModal({ isOpen, onClose, onSuccess, title }: CitizenA
 
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               {language === 'gu'
-                ? 'ડેમો હેતુ માટે, તમે કોઈપણ મોબાઇલ અથવા ઇમેઇલ દાખલ કરી શકો છો. ડેમો OTP 123456 છે.'
-                : 'For demonstration, enter any 10-digit mobile or valid email. Demo OTP is 123456.'}
+                ? 'ચકાસણી માટે તમારા મોબાઇલ નંબર અથવા ઇમેઇલ પર OTP મોકલવામાં આવશે.'
+                : 'An OTP will be sent to your mobile number or email for verification.'}
             </p>
 
             <div className="flex justify-end gap-3 pt-2">

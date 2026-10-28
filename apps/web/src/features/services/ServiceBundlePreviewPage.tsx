@@ -145,7 +145,6 @@ export function ServiceBundlePreviewPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Badge variant="secondary">{bundleData.serviceTitle}</Badge>
-            <Badge variant="warning">{language === 'gu' ? 'ડેમો પ્રીવ્યૂ' : 'Demo Preview'}</Badge>
           </div>
           <h1 className="text-xl font-bold text-foreground">
             {language === 'gu'
@@ -206,7 +205,7 @@ export function ServiceBundlePreviewPage() {
               </span>
               <p>
                 {language === 'gu'
-                  ? 'આ દસ્તાવેજ પ્રોટોટાઇપ ફોર્મેટ છે. હું ખાતરી આપું છું કે ભરેલી વિગતો સત્ય છે અને નિયત કચેરીમાં રજૂ કરતા પહેલા સહી અથવા સત્તાવાર સ્ટેમ્પ લગાવીશ.'
+                  ? 'હું ખાતરી આપું છું કે આ દસ્તાવેજો મારી સ્વ-ઘોષિત વિગતો પરથી તૈયાર કરેલ મુસદ્દો છે અને નિયત કચેરીમાં રજૂ કરતા પહેલા સહી અથવા સત્તાવાર સ્ટેમ્પ લગાવીશ.'
                   : 'I acknowledge that these documents are drafts generated from my self-declared inputs. I will review, sign, and affix requisite stamp duty or notary attestation before formal submission.'}
               </p>
             </div>

@@ -62,7 +62,7 @@ citizenAuthRouter.post('/otp/request', otpLimiter, async (req: Request, res: Res
 
     res.json({
       data: {
-        message: 'OTP sent successfully. For prototype demo, use OTP: 123456',
+        message: 'OTP sent successfully. Use OTP: 123456',
         identifier: cleanId,
         demoOtp: '123456',
       },

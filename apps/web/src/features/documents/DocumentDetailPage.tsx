@@ -113,9 +113,6 @@ export function DocumentDetailPage() {
             <Badge variant="secondary" className="capitalize">
               {template.category.replace('_', ' ')}
             </Badge>
-            <Badge variant="warning">
-              {language === 'gu' ? 'માત્ર ડેમો હેતુ માટે' : 'Demo Only — Not Official'}
-            </Badge>
             <span className="text-xs text-muted-foreground ml-auto flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
               <span>Version {version.version} (Published)</span>
