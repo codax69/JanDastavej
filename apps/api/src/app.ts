@@ -28,6 +28,19 @@ app.use(
     customProps: (req) => ({
       requestId: (req as any).requestId,
     }),
+    customSuccessMessage: (req, res, responseTime) =>
+      `${req.method} ${req.url} -> ${res.statusCode} (${Math.round(responseTime)}ms)`,
+    customErrorMessage: (req, res, err) =>
+      `${req.method} ${req.url} -> ${res.statusCode} (${err.message})`,
+    serializers: {
+      req: (req) => ({
+        method: req.method,
+        url: req.url,
+      }),
+      res: (res) => ({
+        statusCode: res.statusCode,
+      }),
+    },
   })
 );
 

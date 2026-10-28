@@ -1,0 +1,43 @@
+services:
+  api:
+    image: ${API_IMAGE:-ghcr.io/codax69/jandastavej/api:latest}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: jandastavej-api
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      # Atlas connection string loaded from .env
+      MONGODB_URI: ${MONGODB_URI}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      LOG_FORMAT: ${LOG_FORMAT:-pretty}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      JWT_SECRET: ${JWT_SECRET:-super-secure-production-jwt-secret-replace-me}
+      PDF_CONCURRENCY_LIMIT: ${PDF_CONCURRENCY_LIMIT:-3}
+    networks:
+      - jandastavej-net
+
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/codax69/jandastavej/web:latest}
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_URL:-http://localhost:4000/api/v1}
+    container_name: jandastavej-web
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      api:
+        condition: service_started
+    networks:
+      - jandastavej-net
+
+networks:
+  jandastavej-net:
+    driver: bridge
