@@ -21,7 +21,9 @@ COPY packages/shared ./packages/shared
 RUN npm run build --workspace=packages/shared
 
 # Environment arguments for Vite build
-ARG VITE_API_BASE_URL
+ARG VITE_API_URL=/api/v1
+ARG VITE_API_BASE_URL=/api/v1
+ENV VITE_API_URL=${VITE_API_URL}
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
 # Copy web app source and build optimized Vite bundle

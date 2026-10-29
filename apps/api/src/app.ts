@@ -17,25 +17,39 @@ import { meRouter } from './modules/me/me.router.js';
 
 export const app = express();
 
+// Disable ETag generation to prevent 304 Not Modified on API routes
+app.set('etag', false);
+
 app.use(requestIdMiddleware);
+
+// Force fresh responses on all API endpoints
+app.use('/api/', (_req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
 
 app.use(
   pinoHttp({
     logger,
     autoLogging: {
-      ignore: (req) => req.url === '/api/v1/health',
+      ignore: (req) => {
+        const path = (req as any).originalUrl || req.url;
+        return path === '/api/v1/health' || path.startsWith('/api/v1/health');
+      },
     },
     customProps: (req) => ({
       requestId: (req as any).requestId,
     }),
     customSuccessMessage: (req, res, responseTime) =>
-      `${req.method} ${req.url} -> ${res.statusCode} (${Math.round(responseTime)}ms)`,
+      `${req.method} ${(req as any).originalUrl || req.url} -> ${res.statusCode} (${Math.round(responseTime)}ms)`,
     customErrorMessage: (req, res, err) =>
-      `${req.method} ${req.url} -> ${res.statusCode} (${err.message})`,
+      `${req.method} ${(req as any).originalUrl || req.url} -> ${res.statusCode} (${err.message})`,
     serializers: {
       req: (req) => ({
         method: req.method,
-        url: req.url,
+        url: (req as any).originalUrl || req.url,
       }),
       res: (res) => ({
         statusCode: res.statusCode,
@@ -45,9 +59,29 @@ app.use(
 );
 
 app.use(helmet());
+const configuredOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+const allowedOrigins = Array.from(
+  new Set([
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
+    ...configuredOrigins,
+  ])
+);
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
     credentials: true,
   })
 );
