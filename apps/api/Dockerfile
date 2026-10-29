@@ -43,13 +43,14 @@ ENV NODE_ENV=production \
     LOG_FORMAT=pretty \
     LOG_LEVEL=info
 
-# Install only minimal headless chromium, Gujarati fonts, and dumb-init
+# Install minimal headless chromium, Gujarati fonts, dumb-init, and pm2
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     fonts-noto-extra \
     fonts-indic \
     dumb-init \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/* /var/log/*
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/* /var/log/* \
+    && npm install -g pm2
 
 # Copy built dist files & production node_modules from builder
 COPY --from=builder /app/package.json /app/package-lock.json ./
@@ -58,6 +59,10 @@ COPY --from=builder /app/packages/shared/package.json ./packages/shared/
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY ecosystem.config.js ./
+
+# Ensure logs and PM2 runtime home writable by non-root node user
+RUN mkdir -p /app/logs /home/node/.pm2 && chown -R node:node /app/logs /home/node/.pm2
 
 # Security: non-root user
 USER node
@@ -69,4 +74,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || 4000) + '/api/v1/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "apps/api/dist/server.js"]
+CMD ["pm2-runtime", "start", "ecosystem.config.js", "--only", "jandastavej-api"]

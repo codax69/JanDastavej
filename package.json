@@ -15,9 +15,16 @@
     "build:shared": "npm run build --workspace=packages/shared",
     "typecheck": "npm run build:shared && npm run typecheck --workspaces --if-present",
     "test": "npm run build:shared && npm run test --workspaces --if-present",
-    "lint": "npm run build:shared && npm run lint --workspaces --if-present"
+    "lint": "npm run build:shared && npm run lint --workspaces --if-present",
+    "pm2:start": "npm run build:shared && npm run build --workspace=apps/api && pm2 start ecosystem.config.js --only jandastavej-api",
+    "pm2:dev": "npm run build:shared && pm2 start ecosystem.config.js --only jandastavej-api-dev",
+    "pm2:stop": "pm2 stop ecosystem.config.js",
+    "pm2:restart": "pm2 restart ecosystem.config.js",
+    "pm2:logs": "pm2 logs jandastavej-api",
+    "pm2:status": "pm2 status"
   },
   "devDependencies": {
+    "pm2": "^7.1.1",
     "typescript": "^5.8.2"
   }
 }
