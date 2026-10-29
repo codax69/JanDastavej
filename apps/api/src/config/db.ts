@@ -1,14 +1,13 @@
 import mongoose from 'mongoose';
 import { logger } from './logger.js';
 
-const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/jandastavej';
-
 export async function connectDB(): Promise<typeof mongoose> {
   if (mongoose.connection.readyState === 1) {
     return mongoose;
   }
+  const uri = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/jandastavej';
   try {
-    const conn = await mongoose.connect(MONGODB_URI, {
+    const conn = await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 5000,
     });
     logger.info(`MongoDB connected to database: ${conn.connection.name}`);
