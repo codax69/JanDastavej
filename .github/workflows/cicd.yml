@@ -73,9 +73,17 @@ jobs:
       - name: Build shared package
         run: npm run build:shared
 
+      - name: Seed test database
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://127.0.0.1:27017/jandastavej-test
+          MONGO_URI: mongodb://127.0.0.1:27017/jandastavej-test
+        run: npm run seed --workspace=apps/api
+
       - name: Run Vitest test suites
         env:
           NODE_ENV: test
+          MONGODB_URI: mongodb://127.0.0.1:27017/jandastavej-test
           MONGO_URI: mongodb://127.0.0.1:27017/jandastavej-test
           LOG_FORMAT: pretty
           LOG_LEVEL: warn

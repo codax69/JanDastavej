@@ -1,4 +1,15 @@
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+
+console.log('[Dev] Ensuring @jandastavej/shared is built...');
+const buildShared = spawnSync('npm', ['run', 'build', '--workspace=packages/shared'], {
+  stdio: 'inherit',
+  shell: true,
+});
+
+if (buildShared.status !== 0) {
+  console.error('[Dev] Failed to build @jandastavej/shared. Aborting dev startup.');
+  process.exit(1);
+}
 
 function run(name, cmd, args) {
   const proc = spawn(cmd, args, { stdio: 'inherit', shell: true });
