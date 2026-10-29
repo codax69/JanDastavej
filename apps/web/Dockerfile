@@ -1,49 +1,49 @@
 # syntax=docker/dockerfile:1.7
 
 # ==============================================================================
-# JanDastavej Web Production Dockerfile
-# Multi-stage, high performance Nginx static bundle runner
+# JanDastavej Web - Lightweight Production Dockerfile
+# Minimal multi-stage Vite builder -> 25MB Nginx Alpine runner
 # ==============================================================================
 
-# Stage 1: Builder
+# --- Stage 1: Build Static Assets ---
 FROM node:22-alpine AS builder
 WORKDIR /app
 
-# Copy monorepo manifests
+# Copy dependency manifests first for layer caching
 COPY package.json package-lock.json tsconfig.base.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY apps/web/package.json ./apps/web/
 
-# Clean install
-RUN npm ci
+RUN npm ci --no-audit --prefer-offline
 
-# Copy shared package and build
+# Compile shared library
 COPY packages/shared ./packages/shared
 RUN npm run build --workspace=packages/shared
 
-# Build args for frontend environment variables
+# Environment arguments for Vite build
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
-# Copy web app source and build Vite bundle
+# Copy web app source and build optimized Vite bundle
 COPY apps/web ./apps/web
-RUN npm run build --workspace=apps/web
+RUN npm run build --workspace=apps/web \
+    && rm -rf /root/.npm
 
-# Stage 2: Minimal Production Nginx Runner
+# --- Stage 2: Ultra-lean Nginx Runner (~25MB) ---
 FROM nginx:1.27-alpine AS runner
 
-# Remove default static pages
+# Remove default nginx boilerplate
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy compiled SPA assets from builder
+# Copy pre-compressed/built SPA distribution
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 
-# Copy custom hardened Nginx configuration
+# Copy hardened production Nginx config
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
-# Health check using lightweight wget
+# Lightweight healthcheck using wget
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://127.0.0.1/healthz || exit 1
 

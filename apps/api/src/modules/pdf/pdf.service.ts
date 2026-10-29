@@ -8,12 +8,19 @@ const MAX_CONCURRENT_PDF_JOBS = parseInt(process.env.PDF_CONCURRENCY_LIMIT || '3
 
 async function getBrowser(): Promise<Browser> {
   if (!browserInstance || !browserInstance.isConnected()) {
+    const executablePath =
+      process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
+      process.env.CHROMIUM_PATH ||
+      undefined;
+
     browserInstance = await chromium.launch({
+      executablePath,
       headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
+        '--disable-gpu',
         '--disable-background-networking',
         '--disable-default-apps',
         '--disable-extensions',
@@ -25,7 +32,9 @@ async function getBrowser(): Promise<Browser> {
         '--safebrowsing-disable-auto-update',
       ],
     });
-    logger.info('Playwright Chromium browser initialized for PDF generation');
+    logger.info(
+      `Playwright Chromium browser initialized for PDF generation (binary: ${executablePath || 'bundled'})`
+    );
   }
   return browserInstance;
 }
