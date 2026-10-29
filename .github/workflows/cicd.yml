@@ -202,6 +202,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT || 22 }}
           source: 'docker-compose.yml'
           target: ${{ secrets.SERVER_APP_DIR || '/opt/jandastavej' }}
+          overwrite: true
 
       - name: Deploy containers via SSH
         uses: appleboy/ssh-action@v1.2.0
