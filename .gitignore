@@ -8,3 +8,21 @@ coverage
 playwright-report
 test-results
 .DS_Store
+
+# GSD (Get Shit Done)
+.gsd/
+.agent/
+.agents/
+.gemini/
+adapters/
+GSD-STYLE.md
+PROJECT_RULES.md
+model_capabilities.yaml
+docs/model-selection-playbook.md
+docs/runbook.md
+docs/token-optimization-guide.md
+
+# Agent scripts
+scripts/validate-*
+scripts/search_repo.*
+scripts/setup_search.*
