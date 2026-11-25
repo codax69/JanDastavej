@@ -76,7 +76,7 @@ export function ServicesPage() {
   return (
     <div id="tour-services" className="space-y-6">
       {/* Header */}
-      <div className="space-y-2">
+      <div id="tour-services-header" className="space-y-2">
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="gap-1 font-bold">
             <Building2 className="h-3.5 w-3.5" />
@@ -97,7 +97,7 @@ export function ServicesPage() {
       </div>
 
       {/* Search and Category Filter Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-card p-4 rounded-lg border border-border shadow-xs">
+      <div id="tour-services-filters" className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-card p-4 rounded-lg border border-border shadow-xs">
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
@@ -153,7 +153,7 @@ export function ServicesPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="tour-services-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredServices.map((service) => (
             <Card key={service._id} className="flex flex-col hover:border-primary/50 transition-colors shadow-xs">
               <CardHeader className="space-y-2 pb-3">

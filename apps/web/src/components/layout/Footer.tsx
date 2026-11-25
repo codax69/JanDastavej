@@ -21,7 +21,7 @@ export function Footer() {
         </div>
 
         {/* Admin Portal Button */}
-        <div className="flex items-center gap-3">
+        <div id="tour-footer-admin" className="flex items-center gap-3">
           <Link
             to="/admin/login"
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border border-primary/20 transition-all duration-150 shadow-2xs"

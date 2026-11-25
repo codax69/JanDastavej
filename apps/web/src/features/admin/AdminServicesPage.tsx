@@ -319,7 +319,7 @@ export function AdminServicesPage() {
       </div>
 
       {/* Analytics Summary Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div id="tour-admin-services-stats" className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card className="p-4 border-l-4 border-l-primary">
           <div className="text-xs font-semibold text-muted-foreground">Total Services</div>
           <div className="text-2xl font-black text-foreground mt-1">{services.length}</div>
@@ -343,7 +343,7 @@ export function AdminServicesPage() {
       </div>
 
       {/* Search and Filters */}
-      <Card className="p-4">
+      <Card id="tour-admin-services-controls" className="p-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="relative w-full sm:w-80">
             <Search className="h-4 w-4 absolute left-3 top-2.5 text-muted-foreground" />
@@ -387,7 +387,7 @@ export function AdminServicesPage() {
       </Card>
 
       {/* Services Table */}
-      <Card className="overflow-hidden border border-border shadow-xs">
+      <Card id="tour-admin-services-table" className="overflow-hidden border border-border shadow-xs">
         <CardHeader className="bg-muted/30 border-b border-border py-4 px-6 flex flex-row items-center justify-between">
           <CardTitle className="text-base font-bold flex items-center gap-2">
             <Layers className="h-4 w-4 text-primary" />

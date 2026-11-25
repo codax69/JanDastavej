@@ -110,7 +110,7 @@ export function AdminSubmissionsPage() {
       </div>
 
       {/* Filter and Action Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-card p-4 rounded-lg border border-border">
+      <div id="tour-admin-submissions-controls" className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-card p-4 rounded-lg border border-border">
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -148,7 +148,7 @@ export function AdminSubmissionsPage() {
       </div>
 
       {/* Table Card */}
-      <Card>
+      <Card id="tour-admin-submissions-table">
         <CardHeader className="border-b border-border py-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-bold flex items-center gap-2">

@@ -22,7 +22,7 @@ Upload my document → Safety scan → Extract text/fields → User reviews & co
 | PRD §6.2: no long-term vault, no default storage of sensitive docs | Add an **opt-in** private "My Documents" area with short default retention. Default is **no storage**: files are deleted after the session unless the user chooses "Keep" |
 | PRD NFR-07 / TRD §8: minimize PII, no raw document storage by default | Still holds as the default. Storage only with explicit consent, per file, with a visible expiry and a delete button |
 | Anonymous generation | Generating from a blank form stays anonymous. **Uploading personal documents requires sign-in** (email/phone OTP) |
-| No AI on personal data | AI is **off by default** for personal documents. Extraction uses local OCR + rules. AI-assisted extraction only if the department approves the provider, and only after explicit user consent |
+| No AI on personal data | AI is **off by default** for personal documents. Current extraction uses local text parsing and rules; image OCR is not implemented. AI-assisted extraction only if the department approves the provider, and only after explicit user consent |
 | Out of scope: identity verification | Still out of scope. The app **does not verify** that an uploaded ID is genuine; it only helps copy details, which the user confirms |
 
 ## 3. Roles
@@ -65,6 +65,8 @@ Upload my document → Safety scan → Extract text/fields → User reviews & co
 - Library gets category chips: **Affidavits · Declarations · Undertakings · Letters · Other**.
 
 ## 5. Extraction pipeline (server-side, sandboxed worker)
+
+**Implementation status:** The current `DocumentExtractor` reads PDF text streams and decodes other buffers as UTF-8; it does not perform DOCX parsing or image OCR. The DOCX/Tesseract steps below are planned behavior, not currently available extraction support.
 
 1. **Safety gate**: magic-byte MIME check; reject macros, encrypted PDFs, active content, oversize/page-bomb files; malware scan (ClamAV or equivalent); strip metadata (including EXIF GPS).
 2. **Text extraction**: PDF text layer; DOCX via mammoth; images/scans via Tesseract OCR (`eng` + `guj`). Record confidence per field.

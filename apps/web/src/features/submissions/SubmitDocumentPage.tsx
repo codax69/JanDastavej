@@ -178,7 +178,7 @@ export function SubmitDocumentPage() {
   return (
     <div className="space-y-8 max-w-4xl mx-auto py-4">
       {/* Page Title Header */}
-      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 rounded-xl border border-primary/20">
+      <div id="tour-submit-header" className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 rounded-xl border border-primary/20">
         <div className="flex items-center gap-2 mb-2">
           <Badge variant="default" className="gap-1 text-xs">
             <Sparkles className="h-3 w-3" />
@@ -336,7 +336,7 @@ export function SubmitDocumentPage() {
         /* FORM SUBMISSION */
         <form onSubmit={handleSubmitAndScan} className="space-y-6">
           {/* Quick Presets for Demo / Testing */}
-          <Card>
+          <Card id="tour-submit-presets">
             <CardHeader className="py-3.5 border-b border-border bg-muted/30">
               <CardTitle className="text-xs uppercase font-bold text-muted-foreground flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
@@ -366,7 +366,7 @@ export function SubmitDocumentPage() {
           </Card>
 
           {/* Form Inputs */}
-          <Card>
+          <Card id="tour-submit-form">
             <CardHeader className="border-b border-border py-4">
               <CardTitle className="text-base font-bold flex items-center gap-2">
                 <FileText className="h-4 w-4 text-primary" />

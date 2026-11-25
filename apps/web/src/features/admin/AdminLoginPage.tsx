@@ -49,6 +49,7 @@ export function AdminLoginPage() {
     <div className="max-w-md mx-auto my-8 space-y-6">
       <div>
         <Link
+          id="tour-admin-login-back"
           to="/"
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors mb-2"
         >
@@ -64,7 +65,7 @@ export function AdminLoginPage() {
         </p>
       </div>
 
-      <Card>
+      <Card id="tour-admin-login-form">
         <CardHeader className="border-b border-border">
           <CardTitle className="text-base flex items-center gap-2">
             <Lock className="h-4 w-4 text-primary" />
@@ -104,7 +105,7 @@ export function AdminLoginPage() {
           </form>
 
           {/* Quick Demo Credentials Fill Buttons */}
-          <div className="pt-4 border-t border-border space-y-2">
+          <div id="tour-admin-quick-roles" className="pt-4 border-t border-border space-y-2">
             <div className="text-xs font-semibold text-muted-foreground">Quick Roles (1-Click Fill):</div>
             <div className="grid grid-cols-2 gap-2">
               <Button

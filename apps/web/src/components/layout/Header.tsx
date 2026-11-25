@@ -80,6 +80,7 @@ export function Header() {
           
           {/* Brand Wordmark & Emblem */}
           <Link
+            id="tour-brand-logo"
             to="/"
             className="flex items-center gap-1.5 group shrink-0 focus-visible:outline-2 focus-visible:outline-primary rounded-lg py-1"
             aria-label="JanDastavej Home"
@@ -95,7 +96,7 @@ export function Header() {
           {/* Desktop Navigation & Utilities */}
           <div className="hidden lg:flex items-center gap-2 xl:gap-2.5 shrink-0">
             {/* Primary Nav Links */}
-            <nav className="flex items-center gap-1 xl:gap-1.5">
+            <nav id="tour-main-nav" className="flex items-center gap-1 xl:gap-1.5">
               {navLinks.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -125,7 +126,7 @@ export function Header() {
             <div className="h-5 w-px bg-border/80 shrink-0 mx-0.5" />
 
             {/* Utility Actions (Help, Privacy, Clear Data) */}
-            <div className="flex items-center gap-1 xl:gap-1.5">
+            <div id="tour-global-utilities" className="flex items-center gap-1 xl:gap-1.5">
 
               {/* Help Modal Trigger */}
               <button
@@ -186,7 +187,7 @@ export function Header() {
             <div className="h-5 w-px bg-border/80 shrink-0 mx-0.5" />
 
             {/* Citizen Auth Status */}
-            <div className="flex items-center">
+            <div id="tour-citizen-account" className="flex items-center">
               {citizen ? (
                 <div className="h-8 inline-flex items-center gap-1.5 pl-2.5 pr-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-foreground whitespace-nowrap">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
@@ -222,6 +223,7 @@ export function Header() {
 
             {/* Language Switcher */}
             <button
+              id="tour-language-switcher"
               type="button"
               onClick={toggleLanguage}
               className="h-8 inline-flex items-center justify-center gap-1.5 px-2.5 rounded-lg text-xs font-bold border border-border bg-card hover:bg-muted text-foreground transition-all shadow-2xs whitespace-nowrap cursor-pointer"
@@ -249,6 +251,7 @@ export function Header() {
             </button>
 
             <button
+              id="tour-mobile-menu-btn"
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="h-8 w-8 inline-flex items-center justify-center rounded-lg hover:bg-muted text-foreground border border-border/80 transition-colors cursor-pointer"

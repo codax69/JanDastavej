@@ -282,7 +282,7 @@ export function ServiceBundleFormPage() {
       </div>
 
       {/* Optional Upload Supporting Document Entry Point (Feature Addendum 2) */}
-      <div className="bg-card border border-primary/20 rounded-xl p-4 sm:p-5 shadow-xs space-y-3">
+      <div id="tour-bundle-upload" className="bg-card border border-primary/20 rounded-xl p-4 sm:p-5 shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
@@ -406,7 +406,7 @@ export function ServiceBundleFormPage() {
             )}
 
             {/* Document Selection Box */}
-            <div className="p-4 rounded-lg border border-border bg-muted/20 space-y-3">
+            <div id="tour-bundle-doc-select" className="p-4 rounded-lg border border-border bg-muted/20 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-sm text-foreground flex items-center gap-1.5">
                   <Layers className="h-4 w-4 text-primary" />

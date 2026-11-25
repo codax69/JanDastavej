@@ -190,7 +190,7 @@ export function PreviewPage() {
       </div>
 
       {/* Mandatory Legal Disclaimer Banner Before Download */}
-      <div className="no-print space-y-3">
+      <div id="tour-preview-disclaimer" className="no-print space-y-3">
         <Alert variant="warning" title={language === 'gu' ? 'કાનૂની સૂચના અને બાંહેધરી' : 'Legal Disclaimer & Acknowledgment'}>
           <div className="space-y-2">
             <p className="text-xs leading-relaxed">
@@ -286,7 +286,7 @@ export function PreviewPage() {
       )}
 
       {/* Action Buttons Bar */}
-      <div className="bg-card p-4 rounded-lg border border-border flex flex-wrap items-center justify-between gap-4 no-print shadow-xs">
+      <div id="tour-preview-actions" className="bg-card p-4 rounded-lg border border-border flex flex-wrap items-center justify-between gap-4 no-print shadow-xs">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="md" onClick={handlePrint} className="gap-2">
             <Printer className="h-4 w-4" />
@@ -362,7 +362,7 @@ export function PreviewPage() {
       </div>
 
       {/* A4 Paper Document Canvas (Single Render Path) */}
-      <div className="w-full overflow-x-auto pb-8 flex justify-center bg-muted/40 p-4 sm:p-8 rounded-xl border border-border">
+      <div id="tour-preview-canvas" className="w-full overflow-x-auto pb-8 flex justify-center bg-muted/40 p-4 sm:p-8 rounded-xl border border-border">
         {/* Document CSS embedded for exact rendering */}
         <style dangerouslySetInnerHTML={{ __html: getDocumentStyles() }} />
 

@@ -42,7 +42,7 @@ export function AdminAuditPage() {
         </Link>
       </div>
 
-      <Card>
+      <Card id="tour-admin-audit-table">
         <CardHeader className="border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <CardTitle className="text-xl flex items-center gap-2">
@@ -54,7 +54,7 @@ export function AdminAuditPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 text-xs">
+          <div id="tour-admin-audit-filter" className="flex items-center gap-2 text-xs">
             <span className="font-semibold text-muted-foreground">Filter:</span>
             <select
               value={actionFilter}

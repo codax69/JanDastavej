@@ -1,115 +1,67 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, CheckCircle2, Compass, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Compass, MapPin, X } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext.js';
 import { useCitizenAuth } from '../../context/CitizenAuthContext.js';
 import { Button } from '../ui/Button.js';
+import { NECESSARY_TOUR_STEPS, TourPageId } from './tourSteps.js';
 
-interface TourStep {
-  route: string;
-  targetId?: string;
-  requiresAuth?: boolean;
-  title: { en: string; gu: string };
-  description: { en: string; gu: string };
+function isElementVisible(element: HTMLElement | null): element is HTMLElement {
+  if (!element || !element.isConnected) return false;
+  if (element.getClientRects().length === 0) return false;
+  const style = window.getComputedStyle(element);
+  return style.display !== 'none' && style.visibility !== 'hidden';
 }
 
-const TOUR_STEPS: TourStep[] = [
-  {
-    route: '/',
-    targetId: 'tour-search',
-    title: { en: 'Welcome to JanDastavej', gu: 'JanDastavej માં આપનું સ્વાગત છે' },
-    description: {
-      en: 'Start here. Search for a government service or an affidavit, declaration, undertaking, or letter.',
-      gu: 'અહીંથી શરૂ કરો. સરકારી સેવા અથવા સોગંદનામું, ઘોષણા, બાંહેધરીપત્ર અથવા પત્ર માટે શોધો.',
-    },
-  },
-  {
-    route: '/services',
-    targetId: 'tour-services',
-    title: { en: 'Choose a citizen service', gu: 'નાગરિક સેવા પસંદ કરો' },
-    description: {
-      en: 'Browse services by department or category. Open a service to see every document it requires.',
-      gu: 'વિભાગ અથવા શ્રેણી મુજબ સેવાઓ જુઓ. જરૂરી દરેક દસ્તાવેજની યાદી જોવા સેવા ખોલો.',
-    },
-  },
-  {
-    route: '/documents',
-    targetId: 'tour-template-library',
-    title: { en: 'Search or filter formats', gu: 'ફોર્મેટ શોધો અથવા ફિલ્ટર કરો' },
-    description: {
-      en: 'Use search and category filters to find a specific template, then choose “Select Format”.',
-      gu: 'ચોક્કસ ફોર્મેટ શોધવા માટે સર્ચ અથવા ફિલ્ટર વાપરો, પછી “Select Format” પસંદ કરો.',
-    },
-  },
-  {
-    route: '/documents',
-    targetId: 'tour-template-library',
-    title: { en: 'Review the document requirements', gu: 'દસ્તાવેજની જરૂરિયાતો ચકાસો' },
-    description: {
-      en: 'Open the format to review its purpose, required information, supporting documents, and next steps.',
-      gu: 'હેતુ, જરૂરી માહિતી, સહાયક પુરાવા અને આગળના પગલાં જાણવા ફોર્મેટ ખોલો.',
-    },
-  },
-  {
-    route: '/documents',
-    targetId: 'tour-template-library',
-    title: { en: 'Enter details once', gu: 'વિગતો એકવાર ભરો' },
-    description: {
-      en: 'Select “Create Document” and complete the form. You can optionally scan a supporting document, but every extracted value must be reviewed.',
-      gu: '“Create Document” પસંદ કરો અને ફોર્મ ભરો. વૈકલ્પિક રીતે સહાયક દસ્તાવેજ અપલોડ કરી શકો છો, પણ કાઢેલી દરેક વિગત તમે ચકાસવી જરૂરી છે.',
-    },
-  },
-  {
-    route: '/documents',
-    targetId: 'tour-template-library',
-    title: { en: 'Preview and edit', gu: 'પ્રિવ્યૂ કરો અને સુધારો કરો' },
-    description: {
-      en: 'After submission, inspect the A4 preview. Use “Edit Answers” if any detail or wording needs correction.',
-      gu: 'સબમિટ કર્યા બાદ A4 પ્રિવ્યૂ તપાસો. કોઈ માહિતી અથવા લખાણ સુધારવું હોય તો “Edit Answers” વાપરો.',
-    },
-  },
-  {
-    route: '/documents',
-    targetId: 'tour-template-library',
-    title: { en: 'Accept the notice and export', gu: 'સૂચન સ્વીકારી ફાઈલ તૈયાર કરો' },
-    description: {
-      en: 'Accept the legal disclaimer, then download PDF or DOCX. Print it for the required signature, stamp, notarization, or submission process.',
-      gu: 'કાનૂની સૂચન સ્વીકારો, પછી PDF અથવા DOCX ડાઉનલોડ કરો. સહી, સ્ટેમ્પ, નોટરી અથવા રજૂઆત માટે પ્રિન્ટ કરો.',
-    },
-  },
-  {
-    route: '/my-documents',
-    targetId: 'tour-my-documents',
-    requiresAuth: true,
-    title: { en: 'Manage saved documents', gu: 'સાચવેલા દસ્તાવેજો મેનેજ કરો' },
-    description: {
-      en: 'Citizens with sign-in can upload supporting documents, keep documents in My Documents, refresh the vault, or remove them.',
-      gu: 'પ્રવેશ કરેલ નાગરિકો સહાયક દસ્તાવેજો અપલોડ, My Documents માં રાખી, રિફ્રેશ અથવા દૂર કરી શકે છે.',
-    },
-  },
-];
+function findVisibleTarget(targetId?: string, fallbackTargetId?: string): HTMLElement | null {
+  if (targetId) {
+    const primary = document.getElementById(targetId);
+    if (isElementVisible(primary)) return primary;
+  }
+  if (fallbackTargetId) {
+    const fallback = document.getElementById(fallbackTargetId);
+    if (isElementVisible(fallback)) return fallback;
+  }
+  return null;
+}
 
 export function SiteTour() {
   const navigate = useNavigate();
   const location = useLocation();
   const { language } = useLanguage();
   const { citizen } = useCitizenAuth();
+
   const [open, setOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
+  const [transitionBanner, setTransitionBanner] = useState<string | null>(null);
+
   const dialogRef = useRef<HTMLElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const hasNavigatedRef = useRef(false);
+  const previousPageIdRef = useRef<TourPageId | null>(null);
 
-  const visibleSteps = useMemo(
-    () => citizen ? TOUR_STEPS : TOUR_STEPS.filter((step) => !step.requiresAuth),
-    [citizen]
-  );
+  const langKey = language === 'gu' ? 'gu' : 'en';
+
+  const visibleSteps = useMemo(() => {
+    const ctx = { isCitizenAuthenticated: Boolean(citizen) };
+    return NECESSARY_TOUR_STEPS.filter((step) => !step.when || step.when(ctx));
+  }, [citizen]);
+
+  const currentStep = visibleSteps[stepIndex] || visibleSteps[0];
+
+  const clearHighlight = useCallback(() => {
+    document.querySelectorAll('.site-tour-highlight').forEach((el) => {
+      el.classList.remove('site-tour-highlight');
+    });
+  }, []);
 
   const closeTour = useCallback(() => {
     setOpen(false);
     setStepIndex(0);
+    setTransitionBanner(null);
     hasNavigatedRef.current = false;
-    document.querySelector('.site-tour-highlight')?.classList.remove('site-tour-highlight');
+    previousPageIdRef.current = null;
+    clearHighlight();
 
     const elementToRestore = returnFocusRef.current;
     const openerIsVisible =
@@ -127,13 +79,15 @@ export function SiteTour() {
     if (focusTarget) {
       window.requestAnimationFrame(() => focusTarget.focus());
     }
-  }, []);
+  }, [clearHighlight]);
 
   useEffect(() => {
     const startTour = () => {
       returnFocusRef.current =
         document.activeElement instanceof HTMLElement ? document.activeElement : null;
       hasNavigatedRef.current = false;
+      previousPageIdRef.current = null;
+      setTransitionBanner(null);
       setStepIndex(0);
       setOpen(true);
     };
@@ -142,42 +96,66 @@ export function SiteTour() {
   }, []);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || visibleSteps.length === 0) return;
+    if (stepIndex >= visibleSteps.length) {
+      setStepIndex(visibleSteps.length - 1);
+    }
+  }, [open, stepIndex, visibleSteps.length]);
 
-    const step = visibleSteps[stepIndex];
-    if (!step) return;
+  useEffect(() => {
+    if (!open || !currentStep) return;
 
-    if (location.pathname !== step.route) {
-      navigate(step.route, { replace: hasNavigatedRef.current });
+    const prevPageId = previousPageIdRef.current;
+    if (prevPageId && prevPageId !== currentStep.pageId && currentStep.transitionMessage) {
+      setTransitionBanner(currentStep.transitionMessage[langKey]);
+    } else if (prevPageId === currentStep.pageId) {
+      setTransitionBanner(null);
+    }
+    previousPageIdRef.current = currentStep.pageId;
+  }, [open, currentStep, langKey]);
+
+  useEffect(() => {
+    if (!open || !currentStep) return;
+
+    if (location.pathname !== currentStep.route) {
+      navigate(currentStep.route, { replace: hasNavigatedRef.current });
       hasNavigatedRef.current = true;
     }
 
     let attempts = 0;
+    clearHighlight();
+
+    const applyHighlight = (): boolean => {
+      clearHighlight();
+      if (!currentStep.targetId && !currentStep.fallbackTargetId) return true;
+
+      const target = findVisibleTarget(currentStep.targetId, currentStep.fallbackTargetId);
+      if (target) {
+        target.classList.add('site-tour-highlight');
+        const largeTarget =
+          currentStep.targetId === 'tour-services' ||
+          currentStep.targetId === 'tour-my-documents' ||
+          target.getBoundingClientRect().height > window.innerHeight * 0.55;
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: largeTarget ? 'start' : 'center',
+        });
+        return true;
+      }
+      return false;
+    };
+
+    if (applyHighlight()) return;
+
     const timer = window.setInterval(() => {
       attempts += 1;
-      document.querySelector('.site-tour-highlight')?.classList.remove('site-tour-highlight');
-      if (step.targetId) {
-        const target = document.getElementById(step.targetId);
-        if (target) {
-          target.classList.add('site-tour-highlight');
-          const largeTarget =
-            step.targetId === 'tour-services' ||
-            step.targetId === 'tour-my-documents' ||
-            target.getBoundingClientRect().height > window.innerHeight * 0.6;
-          target.scrollIntoView({
-            behavior: 'smooth',
-            block: largeTarget ? 'start' : 'center',
-          });
-          window.clearInterval(timer);
-        }
-      } else {
+      if (applyHighlight() || attempts >= 20) {
         window.clearInterval(timer);
       }
-      if (attempts >= 20) window.clearInterval(timer);
     }, 100);
 
     return () => window.clearInterval(timer);
-  }, [open, stepIndex, navigate, location.pathname, visibleSteps]);
+  }, [open, currentStep, navigate, location.pathname, clearHighlight]);
 
   useEffect(() => {
     if (!open) return;
@@ -221,6 +199,7 @@ export function SiteTour() {
         firstElement.focus();
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.cancelAnimationFrame(frame);
@@ -228,11 +207,10 @@ export function SiteTour() {
     };
   }, [open, closeTour]);
 
-  if (!open) return null;
+  if (!open || !currentStep) return null;
 
-  const step = visibleSteps[stepIndex];
-  if (!step) return null;
-  const isLast = stepIndex === visibleSteps.length - 1;
+  const isFirst = stepIndex === 0;
+  const isLast = stepIndex >= visibleSteps.length - 1;
 
   return (
     <div className="fixed inset-0 z-[70] pointer-events-none">
@@ -244,26 +222,30 @@ export function SiteTour() {
         aria-labelledby="site-tour-title"
         aria-describedby="site-tour-description"
         tabIndex={-1}
-        className="pointer-events-auto absolute bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 w-auto sm:w-[390px] max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-xl border border-primary/20 bg-card shadow-2xl"
+        className="pointer-events-auto fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 w-auto sm:w-[395px] max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-xl border-2 border-accent ring-4 ring-accent/25 bg-card shadow-2xl"
       >
-        <div className="flex items-start justify-between gap-3 border-b border-border p-4">
-          <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        {/* Top Golden Tour Accent Header */}
+        <div className="flex items-start justify-between gap-3 border-b border-accent/40 bg-accent/10 p-4">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground shadow-xs">
               <Compass className="h-5 w-5" />
             </span>
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                {language === 'gu' ? `પગલું ${stepIndex + 1} / ${visibleSteps.length}` : `Step ${stepIndex + 1} of ${visibleSteps.length}`}
+                {currentStep.pageTitle[langKey]} ·{' '}
+                {language === 'gu'
+                  ? `પગલું ${stepIndex + 1} / ${visibleSteps.length}`
+                  : `Step ${stepIndex + 1} of ${visibleSteps.length}`}
               </p>
-              <h2 id="site-tour-title" className="text-base font-bold text-primary">
-                {step.title[language === 'gu' ? 'gu' : 'en']}
+              <h2 id="site-tour-title" className="text-base font-bold text-primary leading-snug">
+                {currentStep.title[langKey]}
               </h2>
             </div>
           </div>
           <button
             type="button"
             onClick={closeTour}
-            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
             aria-label={language === 'gu' ? 'માર્ગદર્શન બંધ કરો' : 'Close tour'}
           >
             <X className="h-5 w-5" />
@@ -271,39 +253,71 @@ export function SiteTour() {
         </div>
 
         <div className="p-4 space-y-4">
+          {transitionBanner && (
+            <div
+              role="status"
+              className="flex items-center gap-2 rounded-lg border border-accent/60 bg-warning-bg px-3 py-1.5 text-xs font-semibold text-accent-foreground"
+            >
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-warning" />
+              <span>{transitionBanner}</span>
+            </div>
+          )}
+
           <p id="site-tour-description" className="text-sm leading-relaxed text-muted-foreground">
-            {step.description[language === 'gu' ? 'gu' : 'en']}
+            {currentStep.description[langKey]}
           </p>
+
           <div className="flex items-center gap-1" aria-label="Tour progress">
-            {visibleSteps.map((_, index) => (
+            {visibleSteps.map((step, index) => (
               <span
-                key={index}
-                className={`h-1.5 flex-1 rounded-full ${index <= stepIndex ? 'bg-primary' : 'bg-border'}`}
+                key={step.id}
+                className={`h-1.5 flex-1 rounded-full transition-colors ${
+                  index <= stepIndex ? 'bg-accent' : 'bg-border'
+                }`}
               />
             ))}
           </div>
-          <div className="flex items-center justify-between">
+
+          <div className="flex items-center justify-between gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setStepIndex((current) => Math.max(0, current - 1))}
-              disabled={stepIndex === 0}
+              onClick={() => setStepIndex((curr) => Math.max(0, curr - 1))}
+              disabled={isFirst}
               className="gap-1.5"
             >
               <ArrowLeft className="h-4 w-4" />
-              {language === 'gu' ? 'પાછળ' : 'Back'}
+              <span>{language === 'gu' ? 'પાછળ' : 'Previous'}</span>
             </Button>
-            {isLast ? (
-              <Button size="sm" onClick={closeTour} className="gap-1.5">
-                <CheckCircle2 className="h-4 w-4" />
-                {language === 'gu' ? 'પૂર્ણ' : 'Finish'}
-              </Button>
-            ) : (
-              <Button size="sm" onClick={() => setStepIndex((current) => current + 1)} className="gap-1.5">
-                {language === 'gu' ? 'આગળ' : 'Next'}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            )}
+
+            <div className="flex items-center gap-1.5">
+              {!isLast && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={closeTour}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  {language === 'gu' ? 'છોડો' : 'Skip'}
+                </Button>
+              )}
+
+              {isLast ? (
+                <Button size="sm" onClick={closeTour} className="gap-1.5">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>{language === 'gu' ? 'પૂર્ણ' : 'Finish'}</span>
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={() => setStepIndex((curr) => Math.min(visibleSteps.length - 1, curr + 1))}
+                  className="gap-1.5"
+                >
+                  <span>{language === 'gu' ? 'આગળ' : 'Next'}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </section>

@@ -9,8 +9,8 @@ export interface ExtractionInput {
 
 export class DocumentExtractor {
   /**
-   * Extracts text from document (PDF text stream or OCR for images)
-   * and applies deterministic regex/pattern rules for Indian/Gujarati identity & address documents.
+   * Extracts text from PDF text streams or text-bearing buffers, then applies
+   * deterministic regex/pattern rules for Indian/Gujarati identity and address documents.
    */
   public async extractFields(input: ExtractionInput): Promise<ExtractedFieldItem[]> {
     const rawText = this.extractRawText(input.buffer, input.mimeType);
@@ -18,7 +18,7 @@ export class DocumentExtractor {
   }
 
   /**
-   * Reads textual content from PDF or simulated OCR buffer
+   * Reads textual content from a PDF stream or decodes the buffer as UTF-8.
    */
   private extractRawText(buffer: Buffer, mimeType: string): string {
     if (mimeType === 'application/pdf') {

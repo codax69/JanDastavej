@@ -79,7 +79,7 @@ export function LibraryPage() {
       <StepIndicator currentStep={1} language={language} />
 
       {/* Header */}
-      <div className="space-y-1">
+      <div id="tour-library-header" className="space-y-1">
         <h1 className="text-2xl sm:text-3xl font-bold text-primary">
           {language === 'gu' ? 'દસ્તાવેજ લાઇબ્રેરી' : 'Document Template Library'}
         </h1>
@@ -164,7 +164,7 @@ export function LibraryPage() {
 
       {/* Template Cards Grid */}
       {!isLoading && !error && filteredTemplates.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="tour-library-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTemplates.map((tpl) => (
             <Card key={tpl._id} className="flex flex-col justify-between hover:border-primary/50 transition-colors">
               <CardHeader>
@@ -204,7 +204,7 @@ export function LibraryPage() {
       )}
 
       {/* Can't find your document format? Submit for automated verification */}
-      <Card className="border-dashed border-primary/40 bg-gradient-to-r from-primary/5 via-background to-primary/5 p-6 text-center space-y-3">
+      <Card id="tour-library-submit-cta" className="border-dashed border-primary/40 bg-gradient-to-r from-primary/5 via-background to-primary/5 p-6 text-center space-y-3">
         <div className="inline-flex items-center justify-center p-2 rounded-full bg-primary/10 text-primary mb-1">
           <Sparkles className="h-6 w-6" />
         </div>

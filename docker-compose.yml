@@ -7,7 +7,7 @@ services:
     container_name: jandastavej-api
     restart: unless-stopped
     ports:
-      - "${API_PORT:-4000}:4000"
+      - "127.0.0.1:${API_PORT:-4000}:4000"
     environment:
       PORT: 4000
       NODE_ENV: production

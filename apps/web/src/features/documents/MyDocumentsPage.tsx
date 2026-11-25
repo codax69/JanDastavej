@@ -126,7 +126,7 @@ export function MyDocumentsPage() {
 
   if (!citizen) {
     return (
-      <div className="p-8 text-center bg-card border border-border rounded-xl space-y-4 max-w-lg mx-auto">
+      <div id="tour-my-docs-auth-gate" className="p-8 text-center bg-card border border-border rounded-xl space-y-4 max-w-lg mx-auto">
         <Lock className="h-10 w-10 text-primary mx-auto" />
         <h2 className="text-xl font-bold text-foreground">
           {language === 'gu' ? 'નાગરિક પ્રવેશ આવશ્યક છે' : 'Citizen Sign In Required'}
@@ -160,7 +160,7 @@ export function MyDocumentsPage() {
           <span>{language === 'gu' ? 'દસ્તાવેજ લાઇબ્રેરી' : 'Templates'}</span>
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div id="tour-my-docs-actions" className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={fetchDocuments} disabled={loading} className="gap-1.5">
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>{language === 'gu' ? 'રીફ્રેશ' : 'Refresh'}</span>
@@ -249,7 +249,7 @@ export function MyDocumentsPage() {
       )}
 
       {/* Document List */}
-      <Card>
+      <Card id="tour-my-docs-list">
         <CardHeader className="border-b border-border">
           <CardTitle className="text-base text-foreground flex items-center justify-between">
             <span>{language === 'gu' ? 'સાચવેલ ફાઇલો' : 'Kept Files'}</span>

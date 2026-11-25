@@ -51,7 +51,7 @@ export function LandingPage() {
   return (
     <div className="space-y-12">
       {/* Hero Section */}
-      <section className="text-center space-y-4 max-w-3xl mx-auto pt-4">
+      <section id="tour-hero" className="text-center space-y-4 max-w-3xl mx-auto pt-4">
         <Badge variant="secondary" className="px-3 py-1 text-xs uppercase tracking-wider font-bold">
           {language === 'gu' ? 'ડિજિટલ નાગરિક દસ્તાવેજ સેવા' : 'Digital Citizen Document Portal'}
         </Badge>
@@ -89,7 +89,7 @@ export function LandingPage() {
         </form>
 
         {/* Quick Nav Shortcut Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+        <div id="tour-hero-ctas" className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <Link to="/services">
             <Button variant="secondary" size="sm" className="gap-1.5 font-semibold">
               <Layers className="h-4 w-4 text-primary" />
@@ -247,7 +247,7 @@ export function LandingPage() {
       </section>
 
       {/* Featured Templates */}
-      <section className="space-y-6">
+      <section id="tour-featured-templates" className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-primary">

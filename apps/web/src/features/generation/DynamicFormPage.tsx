@@ -262,7 +262,7 @@ export function DynamicFormPage() {
       </div>
 
       {/* Optional Upload Supporting Document Entry Point (D1, P0) */}
-      <div className="bg-card border border-primary/20 rounded-xl p-4 sm:p-5 shadow-xs space-y-3">
+      <div id="tour-form-upload" className="bg-card border border-primary/20 rounded-xl p-4 sm:p-5 shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
@@ -385,7 +385,7 @@ export function DynamicFormPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6" noValidate>
             {/* Dynamic fields mapped from schema */}
-            <div className="space-y-5">
+            <div id="tour-form-fields" className="space-y-5">
               {version.fields.map((field: TemplateField) => {
                 const baseLabel = language === 'gu' && field.labelGu ? field.labelGu : field.label;
                 const isFromDoc = filledFromDocKeys.includes(field.key);
@@ -536,7 +536,7 @@ export function DynamicFormPage() {
             </div>
 
             {/* Submit Action */}
-            <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div id="tour-form-submit" className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
               <Link to={`/documents/${template.slug}`} className="w-full sm:w-auto">
                 <Button type="button" variant="outline" className="w-full sm:w-auto">
                   {language === 'gu' ? 'રદ કરો' : 'Cancel'}

@@ -76,7 +76,7 @@ export function ServiceDetailPage() {
 
       {/* Main Service Card */}
       <Card className="shadow-xs border-border">
-        <CardHeader className="border-b border-border space-y-4 pb-6">
+        <CardHeader id="tour-service-detail-header" className="border-b border-border space-y-4 pb-6">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary" className="capitalize">
               {language === 'gu' ? service.departmentGu : service.department}
@@ -120,7 +120,7 @@ export function ServiceDetailPage() {
         <CardContent className="pt-6 space-y-8">
 
           {/* Section 1: Required Document Checklists */}
-          <div className="space-y-4">
+          <div id="tour-service-checklist" className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
@@ -241,7 +241,7 @@ export function ServiceDetailPage() {
           )}
 
           {/* Primary CTA Box */}
-          <div className="p-6 rounded-xl bg-primary/5 border border-primary/20 space-y-4 text-center">
+          <div id="tour-service-apply-cta" className="p-6 rounded-xl bg-primary/5 border border-primary/20 space-y-4 text-center">
             <div className="max-w-xl mx-auto space-y-1">
               <h3 className="text-lg font-bold text-primary">
                 {language === 'gu'

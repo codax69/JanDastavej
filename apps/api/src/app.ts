@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { pinoHttp } from 'pino-http';
 import { logger } from './config/logger.js';
+import { getDatabaseInfo } from './config/db.js';
 import { requestIdMiddleware } from './middleware/requestId.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { templatesRouter } from './modules/templates/templates.router.js';
@@ -16,6 +17,10 @@ import { citizenAuthRouter } from './modules/auth/citizenAuth.router.js';
 import { meRouter } from './modules/me/me.router.js';
 
 export const app = express();
+
+// Trust the first reverse proxy (nginx) so that X-Forwarded-For is used correctly
+// for express-rate-limit and req.ip. Set to 1 when behind exactly one proxy.
+app.set('trust proxy', 1);
 
 // Disable ETag generation to prevent 304 Not Modified on API routes
 app.set('etag', false);
@@ -108,6 +113,7 @@ const healthHandler = (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
     service: 'JanDastavej API',
+    database: getDatabaseInfo(),
     timestamp: new Date().toISOString(),
   });
 };

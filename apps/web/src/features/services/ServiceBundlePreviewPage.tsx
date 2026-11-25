@@ -177,7 +177,7 @@ export function ServiceBundlePreviewPage() {
       </div>
 
       {/* Document Selection Tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-border pb-2">
+      <div id="tour-bundle-preview-tabs" className="flex flex-wrap gap-2 border-b border-border pb-2">
         {sessions.map((s: any, idx: number) => (
           <button
             key={idx}
@@ -195,7 +195,7 @@ export function ServiceBundlePreviewPage() {
       </div>
 
       {/* Legal Disclaimer & Download Action Box */}
-      <Card className="border-border shadow-xs bg-card">
+      <Card id="tour-bundle-preview-actions" className="border-border shadow-xs bg-card">
         <CardContent className="pt-5 space-y-4">
           <div className="p-3 rounded-md bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
             <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />

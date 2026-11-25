@@ -39,14 +39,14 @@
   - Document preparation notice (not automatically sworn or filed)
   - PDF Download button is **disabled** until user explicitly checks the acknowledgment box.
 - **Action:** Check the box and click "PDF ડાઉનલોડ કરો".
-- **Action:** Open downloaded PDF. Point out that the PDF layout and text are 100% identical to the browser preview (Single Render Path).
+- **Action:** Open downloaded PDF. Compare it with the browser preview; shared rendering does not guarantee identical pagination, so verify long Gujarati documents using Chromium print settings.
 
 ## Part 5: Admin Governance & Privacy Architecture (2:40 – 3:30)
 - **Action:** Navigate to `/admin/login`. Sign in using HttpOnly cookie credentials (`admin@jandastavej.local`).
 - **Action:** Open `/admin/templates`. Show the full template lifecycle:
   - `Draft → In Review → Approved → Published → Retired`
   - Version immutability: published versions cannot be modified in place.
-- **Action:** Open `/admin/audit`. Show the tamper-evident audit trail:
+- **Action:** Open `/admin/audit`. Show the operational audit log (not tamper-evident):
   - Every creation, approval, and publication is logged with actor and timestamp.
   - Zero document content or citizen answers are stored in audit logs.
 - **Closing:** "JanDastavej is built with zero AI-generated legal text, strict server-side validation, sandboxed offline Playwright PDF generation, and automated test coverage ready for official Collector Office pilot validation."

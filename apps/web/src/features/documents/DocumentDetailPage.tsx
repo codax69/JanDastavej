@@ -108,7 +108,7 @@ export function DocumentDetailPage() {
 
       {/* Main Detail Card */}
       <Card>
-        <CardHeader className="border-b border-border space-y-3">
+        <CardHeader id="tour-doc-detail-header" className="border-b border-border space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary" className="capitalize">
               {template.category.replace('_', ' ')}
@@ -194,7 +194,7 @@ export function DocumentDetailPage() {
           </div>
 
           {/* Primary Start CTA & Report Buttons */}
-          <div className="pt-4 flex flex-wrap items-center justify-between gap-4">
+          <div id="tour-doc-detail-actions" className="pt-4 flex flex-wrap items-center justify-between gap-4">
             <Button
               type="button"
               variant="outline"

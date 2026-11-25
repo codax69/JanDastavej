@@ -13,7 +13,7 @@ A comprehensive automated and manual flow audit was conducted across mobile (360
 - **P0 Defects:** 0 remaining.
 - **P1 Defects:** 0 remaining.
 - **Mobile Horizontal Scroll:** None detected at 360px viewport (`document.documentElement.scrollWidth === window.innerWidth`).
-- **Render Divergence:** 0 divergence (preview and PDF use the identical `renderDocumentHtml` and `getDocumentStyles` module).
+- **Render Path:** Preview and PDF share `renderDocumentHtml` and `getDocumentStyles`; long Gujarati pagination fidelity still requires verification with Chromium print settings.
 
 ---
 
@@ -86,10 +86,10 @@ Captured at 360×800 (mobile) and 1280×800 (desktop):
 | **UD-07** | My Documents & Erasure | Expiry date displayed; immediate delete; Right to Erasure (`DELETE /me/data`) | Immediate deletion from disk storage and DB; "Delete all my data" purges all user files | PASS |
 | **UD-08** | IDOR Isolation | User A cannot read, download, or delete User B's file or extraction | Verified across `/me/documents/:id`, `/me/documents/:id/file`, `/me/documents/:id/extraction` | PASS |
 | **UD-09** | Admin Access Boundary | Admins and staff cannot browse citizen files outside audited break-glass | Admin template routes completely isolated from `/me/*` user documents | PASS |
-| **UD-10** | Minimal AI Assist | AI off by default; minimal masked text only; never images or full IDs | Local OCR + rules default; AI assist guarded by config flag + explicit consent | PASS |
+| **UD-10** | Minimal AI Assist | AI off by default; minimal masked text only; never images or full IDs | Current extraction applies rules to PDF text streams or UTF-8-decoded buffers; image OCR is not implemented. AI assist remains guarded by config flag + explicit consent | PASS |
 | **UD-11** | Sensitive ID Masking | Aadhaar, PAN masked by default in UI (`XXXX-XXXX-1234`), excluded from logs & audits | Sensitive fields masked with show/hide toggle; excluded from pino logs & audit events | PASS |
 | **UD-12** | Annexure Bundling | Merge affidavit with selected annexures into one PDF with Annexure A/B markers | Cover page generated with annexure index; each annexure labeled; single PDF output | PASS |
 | **UD-13** | XSS & Sanitization | Extracted text and filenames HTML-escaped before preview and PDF | XSS payloads (`<script>`, `onerror=`) neutralized via `escapeHtml()` in renderer | PASS |
 | **UD-14** | Gujarati Extraction Fallback | Gujarati ID/address regex patterns extract accurately or fall back to manual | Rule engine parses Gujarati DOB (`જન્મ તારીખ`) and name patterns gracefully | PASS |
-| **UD-15** | Single Render Path | Both preview and PDF use the identical sandboxed rendering engine | Shared Playwright and HTML generator compile identical layout for affidavit and bundles | PASS |
+| **UD-15** | Shared Render Path | Preview and PDF use shared renderer; long-document pagination fidelity is verified separately | Both use the shared renderer; long Gujarati page breaks have not been compared using Chromium print settings | PARTIAL |
 
