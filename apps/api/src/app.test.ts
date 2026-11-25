@@ -9,4 +9,13 @@ describe('API health check', () => {
     expect(res.body.status).toBe('ok');
     expect(res.body.service).toBe('JanDastavej API');
   });
+
+  it.each(['/health', '/healthz', '/api/health'])(
+    'returns status ok on compatibility endpoint %s',
+    async (path) => {
+      const res = await request(app).get(path);
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('ok');
+    }
+  );
 });

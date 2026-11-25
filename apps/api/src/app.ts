@@ -103,14 +103,16 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Health check endpoint
-app.get('/api/v1/health', (_req: Request, res: Response) => {
+// Health check endpoints
+const healthHandler = (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
     service: 'JanDastavej API',
     timestamp: new Date().toISOString(),
   });
-});
+};
+
+app.get(['/health', '/healthz', '/api/health', '/api/v1/health'], healthHandler);
 
 // Redirect browser accesses to /admin to the web frontend SPA
 app.get(['/admin', '/admin/*'], (_req: Request, res: Response) => {
