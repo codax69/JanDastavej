@@ -149,7 +149,7 @@ export function MyDocumentsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div id="tour-my-documents" className="space-y-6 max-w-5xl mx-auto">
       {/* Top Breadcrumb & Actions */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link

@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header.js';
 import { Footer } from './Footer.js';
+import { SiteTour } from '../tour/SiteTour.js';
 
 export function AppLayout() {
   return (
@@ -11,6 +12,7 @@ export function AppLayout() {
         <Outlet />
       </main>
       <Footer />
+      <SiteTour />
     </div>
   );
 }

@@ -67,7 +67,7 @@ export function LandingPage() {
         </p>
 
         {/* Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="max-w-xl mx-auto flex items-center gap-2 pt-4">
+        <form id="tour-search" onSubmit={handleSearchSubmit} className="max-w-xl mx-auto flex items-center gap-2 pt-4">
           <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <input
@@ -106,7 +106,7 @@ export function LandingPage() {
       </section>
 
       {/* High-Impact Citizen Services Section */}
-      <section className="space-y-6">
+      <section id="tour-citizen-services" className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
@@ -174,7 +174,7 @@ export function LandingPage() {
       </section>
 
       {/* How It Works (4 Steps) */}
-      <section className="bg-card border border-border rounded-xl p-6 sm:p-8 space-y-6">
+      <section id="tour-how-it-works" className="bg-card border border-border rounded-xl p-6 sm:p-8 space-y-6">
         <div className="text-center max-w-xl mx-auto space-y-2">
           <h2 className="text-2xl font-bold text-primary">
             {language === 'gu' ? 'કેવી રીતે કાર્ય કરે છે?' : 'How It Works'}

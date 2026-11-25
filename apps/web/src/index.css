@@ -121,6 +121,24 @@
   }
 }
 
+.site-tour-highlight {
+  position: relative;
+  z-index: 45;
+  scroll-margin-top: 96px;
+  border-radius: 0.75rem;
+  box-shadow:
+    0 0 0 4px var(--card),
+    0 0 0 7px var(--accent),
+    0 12px 32px rgb(15 23 42 / 0.18);
+  transition: box-shadow 180ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-tour-highlight {
+    transition: none;
+  }
+}
+
 @media print {
   @page {
     size: A4;

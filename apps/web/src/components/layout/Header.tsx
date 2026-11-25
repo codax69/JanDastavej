@@ -42,6 +42,10 @@ export function Header() {
     setShowClearConfirm(false);
   };
 
+  const startTour = () => {
+    window.dispatchEvent(new CustomEvent('jandastavej:start-tour'));
+  };
+
   const navLinks = [
     {
       to: '/services',
@@ -133,6 +137,19 @@ export function Header() {
                 <HelpCircle className="w-3.5 h-3.5 shrink-0" />
                 <span className="hidden xl:inline leading-none flex items-center">
                   {language === 'gu' ? 'સહાય' : 'Help'}
+                </span>
+              </button>
+
+              <button
+                id="site-tour-launcher"
+                type="button"
+                onClick={startTour}
+                className="h-8 inline-flex items-center justify-center gap-1.5 px-2 xl:px-2.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors whitespace-nowrap cursor-pointer"
+                title={language === 'gu' ? 'સાઈટનું માર્ગદર્શન શરૂ કરો' : 'Start guided tour'}
+              >
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden xl:inline leading-none flex items-center">
+                  {language === 'gu' ? 'માર્ગદર્શન' : 'Take Tour'}
                 </span>
               </button>
 
@@ -328,6 +345,20 @@ export function Header() {
               <button
                 type="button"
                 onClick={() => {
+                  startTour();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors text-left cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                <span className="leading-none flex items-center">
+                  {language === 'gu' ? 'સાઈટનું માર્ગદર્શન લો' : 'Take a Site Tour'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
                   setShowPrivacy(true);
                   setMobileMenuOpen(false);
                 }}
@@ -395,6 +426,17 @@ export function Header() {
               </div>
             </div>
             <div className="flex justify-end pt-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowHelp(false);
+                  startTour();
+                }}
+                size="sm"
+                className="mr-2"
+              >
+                {language === 'gu' ? 'માર્ગદર્શન શરૂ કરો' : 'Start Guided Tour'}
+              </Button>
               <Button onClick={() => setShowHelp(false)} size="sm">
                 {language === 'gu' ? 'સમજાયું' : 'Close'}
               </Button>

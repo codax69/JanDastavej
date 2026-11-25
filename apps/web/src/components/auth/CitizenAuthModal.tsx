@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X, Lock, Phone, Mail, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useCitizenAuth } from '../../context/CitizenAuthContext.js';
 import { useLanguage } from '../../context/LanguageContext.js';
@@ -16,6 +16,7 @@ interface CitizenAuthModalProps {
 export function CitizenAuthModal({ isOpen, onClose, onSuccess, title }: CitizenAuthModalProps) {
   const { language } = useLanguage();
   const { requestOtp, verifyOtp } = useCitizenAuth();
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const [step, setStep] = useState<'request' | 'verify'>('request');
   const [identifier, setIdentifier] = useState('');
@@ -23,6 +24,66 @@ export function CitizenAuthModal({ isOpen, onClose, onSuccess, title }: CitizenA
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [demoNotice, setDemoNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousFocus =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const frame = window.requestAnimationFrame(() => {
+      dialogRef.current
+        ?.querySelector<HTMLElement>(
+          'input:not([disabled]), button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+        )
+        ?.focus();
+    });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setStep('request');
+        setIdentifier('');
+        setOtp('');
+        setError(null);
+        setDemoNotice(null);
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+
+      const focusableElements = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((element) => element.offsetParent !== null);
+
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        dialogRef.current.focus();
+      } else {
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+        if (event.shiftKey && document.activeElement === firstElement) {
+          event.preventDefault();
+          lastElement.focus();
+        } else if (!event.shiftKey && document.activeElement === lastElement) {
+          event.preventDefault();
+          firstElement.focus();
+        } else if (!dialogRef.current.contains(document.activeElement)) {
+          event.preventDefault();
+          firstElement.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('keydown', handleKeyDown);
+      if (previousFocus?.isConnected) {
+        window.requestAnimationFrame(() => previousFocus.focus());
+      }
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -70,15 +131,25 @@ export function CitizenAuthModal({ isOpen, onClose, onSuccess, title }: CitizenA
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
+    <div
+      data-citizen-auth-dialog="true"
+      className="fixed inset-0 z-[80] bg-black/50 flex items-center justify-center p-4"
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="citizen-auth-dialog-title"
+        tabIndex={-1}
+        className="bg-card border border-border rounded-xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150"
+      >
         <div className="flex items-center justify-between pb-3 border-b border-border">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-primary/10 rounded-lg text-primary">
               <Lock className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-foreground">
+              <h3 id="citizen-auth-dialog-title" className="text-lg font-bold text-foreground">
                 {title || (language === 'gu' ? 'નાગરિક પ્રવેશ (OTP)' : 'Citizen Sign In')}
               </h3>
               <p className="text-xs text-muted-foreground">

@@ -74,7 +74,7 @@ export function ServicesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div id="tour-services" className="space-y-6">
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
