@@ -5,7 +5,6 @@ import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { pinoHttp } from 'pino-http';
 import { logger } from './config/logger.js';
-import { getDatabaseInfo } from './config/db.js';
 import { requestIdMiddleware } from './middleware/requestId.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { templatesRouter } from './modules/templates/templates.router.js';
@@ -113,7 +112,6 @@ const healthHandler = (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
     service: 'JanDastavej API',
-    database: getDatabaseInfo(),
     timestamp: new Date().toISOString(),
   });
 };
