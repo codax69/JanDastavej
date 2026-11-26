@@ -11,6 +11,7 @@ export const AuditActionSchema = z.enum([
   'ADMIN_LOGIN_SUCCESS',
   'ADMIN_LOGIN_FAILED',
   'ADMIN_LOGOUT',
+  'CITIZEN_LOGIN_SUCCESS',
 ]);
 export type AuditAction = z.infer<typeof AuditActionSchema>;
 

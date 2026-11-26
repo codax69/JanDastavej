@@ -13,6 +13,7 @@ import {
   AuthenticatedCitizenRequest,
 } from './citizenAuth.middleware.js';
 import { AuditEventModel } from '../../models/AuditEvent.js';
+import { signSessionToken, isSecureRequest } from '../../utils/sessionToken.js';
 
 export const citizenAuthRouter = Router();
 
@@ -105,22 +106,24 @@ citizenAuthRouter.post('/otp/verify', async (req: Request, res: Response, next: 
     user.lastLoginAt = new Date();
     await user.save();
 
-    // Create session cookie token
-    const sessionPayload = JSON.stringify({ userId: String(user._id), identifier: user.identifier, time: Date.now() });
-    const sessionToken = Buffer.from(sessionPayload).toString('base64');
+    const CITIZEN_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+    const sessionToken = signSessionToken(
+      { userId: String(user._id), identifier: user.identifier },
+      CITIZEN_SESSION_TTL_MS
+    );
 
     res.cookie('jd_citizen_session', sessionToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isSecureRequest(req),
       sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      maxAge: CITIZEN_SESSION_TTL_MS,
       path: '/',
     });
 
     await AuditEventModel.create({
       actorUserId: user._id,
       actorEmail: user.identifier,
-      action: 'ADMIN_LOGIN_SUCCESS',
+      action: 'CITIZEN_LOGIN_SUCCESS',
       entityType: 'auth',
       entityId: String(user._id),
       timestamp: new Date(),

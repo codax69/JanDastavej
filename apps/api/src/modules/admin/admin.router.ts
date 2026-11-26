@@ -18,6 +18,7 @@ import { IssueReportModel } from '../../models/IssueReport.js';
 import { ServiceModel } from '../../models/Service.js';
 import { aiScannerService } from '../../services/aiScanner.js';
 import { requireAuth, requireRole, AuthenticatedRequest } from './auth.middleware.js';
+import { signSessionToken, isSecureRequest } from '../../utils/sessionToken.js';
 
 export const adminRouter = Router();
 
@@ -64,15 +65,17 @@ adminRouter.post('/auth/login', loginLimiter, async (req: Request, res: Response
     user.lastLoginAt = new Date();
     await user.save();
 
-    // Create session cookie token (encoded JSON, HttpOnly, SameSite strict)
-    const sessionPayload = JSON.stringify({ userId: String(user._id), role: user.role, time: Date.now() });
-    const sessionToken = Buffer.from(sessionPayload).toString('base64');
+    const ADMIN_SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
+    const sessionToken = signSessionToken(
+      { userId: String(user._id), role: user.role },
+      ADMIN_SESSION_TTL_MS
+    );
 
     res.cookie('jd_admin_session', sessionToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isSecureRequest(req),
       sameSite: 'lax',
-      maxAge: 8 * 60 * 60 * 1000, // 8 hours
+      maxAge: ADMIN_SESSION_TTL_MS,
       path: '/',
     });
 

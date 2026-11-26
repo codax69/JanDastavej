@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { JanDastavejError } from '@jandastavej/shared';
 import { UserModel, IUser } from '../../models/User.js';
+import { verifySessionToken } from '../../utils/sessionToken.js';
 
 export interface AuthenticatedRequest extends Request {
   user?: IUser;
@@ -10,10 +11,10 @@ export async function verifyAdminSession(req: Request): Promise<IUser | null> {
   const sessionCookie = req.cookies?.jd_admin_session;
   if (!sessionCookie) return null;
 
+  const data = verifySessionToken(sessionCookie);
+  if (!data?.userId) return null;
+
   try {
-    const decoded = Buffer.from(sessionCookie, 'base64').toString('utf8');
-    const data = JSON.parse(decoded);
-    if (!data?.userId) return null;
     const user = await UserModel.findById(data.userId);
     if (!user || user.status !== 'active') return null;
     return user;

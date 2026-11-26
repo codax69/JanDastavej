@@ -66,6 +66,7 @@ export function AdminAuditPage() {
               <option value="VERSION_APPROVED">Version Approved</option>
               <option value="VERSION_REJECTED">Version Rejected</option>
               <option value="ADMIN_LOGIN_SUCCESS">Admin Login</option>
+              <option value="CITIZEN_LOGIN_SUCCESS">Citizen Login</option>
             </select>
           </div>
         </CardHeader>

@@ -120,7 +120,8 @@ app.get(['/health', '/healthz', '/api/health', '/api/v1/health'], healthHandler)
 
 // Redirect browser accesses to /admin to the web frontend SPA
 app.get(['/admin', '/admin/*'], (_req: Request, res: Response) => {
-  res.redirect('http://localhost:5173/admin/login');
+  const webBase = (process.env.WEB_URL || '').replace(/\/$/, '');
+  res.redirect(`${webBase}/admin/login`);
 });
 
 // Public routers
