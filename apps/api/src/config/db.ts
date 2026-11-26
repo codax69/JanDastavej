@@ -1,5 +1,9 @@
+import dns from 'node:dns';
 import mongoose from 'mongoose';
 import { logger } from './logger.js';
+
+// Use Google Public DNS for reliable SRV resolution (Atlas mongodb+srv://)
+dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
 
 export async function connectDB(): Promise<typeof mongoose> {
   if (mongoose.connection.readyState === 1) {
